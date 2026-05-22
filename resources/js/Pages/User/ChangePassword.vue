@@ -37,15 +37,6 @@ defineOptions({
 
 const changingPass = ref(false);
 
-function onSuccess(editingForm) {
-
-    editingForm.value = false
-    showMessage.value = true
-    setTimeout(() => {
-        showMessage.value = false
-    }, 2000)
-}
-
 function onError() {
     showMessage.value = true
     setTimeout(() => {
