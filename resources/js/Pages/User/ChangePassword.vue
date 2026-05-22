@@ -15,18 +15,7 @@ const passForm = useForm({
 })
 
 const updatePassword = () => {
-    passForm.post('/profile/updatePassword', {
-        onSuccess: () => {
-            passForm.reset()
-            changingPass.value = false
-            showMessage.value = true
-            setTimeout(() => {
-                showMessage.value = false
-            }, 2000)
-        }
-    }, {
-        onError: () => onError()
-    });
+    passForm.post('/profile/updatePassword');
 }
 defineProps({
     user: Object,
@@ -37,13 +26,6 @@ defineOptions({
 
 const changingPass = ref(false);
 
-function onError() {
-    showMessage.value = true
-    setTimeout(() => {
-        showMessage.value = false
-    }, 2000)
-
-}
 </script>
 
 

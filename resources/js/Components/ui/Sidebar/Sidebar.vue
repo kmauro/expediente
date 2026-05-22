@@ -14,8 +14,6 @@ import {
 } from 'lucide-vue-next'
 import { Link, usePage } from '@inertiajs/vue3'
 
-
-
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -23,7 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '../dropdown-menu'
-import ApplicationLogo from '../ApplicationLogo.vue'
+import ApplicationLogo from '../application-logo/ApplicationLogo.vue'
 
 defineProps({
   sidebarOpen: Boolean,

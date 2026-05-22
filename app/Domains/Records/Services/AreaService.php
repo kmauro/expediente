@@ -22,7 +22,7 @@ class AreaService
         return $this->areaRepository->createGetId($newAreaData);
     }
 
-    public function createArea(array $data) : Area
+    public function create(array $data) : Area
     {
         $newAreaData = NormalizeService::normalizeName($data['name']);
         return $this->areaRepository->create($newAreaData);

@@ -40,7 +40,7 @@ class CounterpartyRequest extends FormRequest
     /**
      * @return array{name: string}
      */
-    public function validatedCounterpartyData(): array
+    public function validatedNewData(): array
     {
         /** @var array{name: string} $validated */
         $validated = $this->validated();

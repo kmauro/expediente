@@ -3,12 +3,12 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import { Input } from '@/Components/ui/input'
 import { Label } from '@/Components/ui/label'
 import Button from '@/Components/ui/button/Button.vue';
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { Edit, CircleXIcon } from 'lucide-vue-next';
 import { useForm } from '@inertiajs/vue3';
-import { usePage } from '@inertiajs/vue3';
 import { NativeSelect, NativeSelectOption } from '@/Components/ui/native-select';
 import ChangePassword from './ChangePassword.vue';
+import NotificationToast from '@/Components/ui/notification-toast/NotificationToast.vue';
 
 defineOptions({
     layout: AppLayout,
@@ -21,16 +21,7 @@ const props = defineProps({
     isAdmin: Boolean,
 })
 
-
-
 const isEditing = ref(false);
-
-
-const showMessage = ref(false);
-
-const page = usePage();
-const successMessage = computed(() => page.props.flash.success);
-const errorMessage = computed(() => page.props.flash.error);
 
 const profileForm = useForm({
     id : props.user.id,
@@ -42,58 +33,14 @@ const profileForm = useForm({
     role_id : props.user.role_id,
 })
 
-
-
 const updateProfile = () => {
-    profileForm.post('/profile', {
-        onSuccess: () => onSuccess(isEditing)
-    }, {
-        onError: () => onError()
-    });
-}
-
-function onSuccess(editingForm, form = null) {
-    if(form){
-        form.reset()
-    }
-    editingForm.value = false
-    showMessage.value = true
-    setTimeout(() => {
-        showMessage.value = false
-    }, 2000)
-}
-
-function onError() {
-    showMessage.value = true
-    setTimeout(() => {
-        showMessage.value = false
-    }, 2000)
-
+    profileForm.post('/profile');
 }
 
 </script>
 
 <template>
-
-    <Transition
-        enter-active-class="transition duration-300"
-        enter-from-class="opacity-0 -translate-y-3"
-        enter-to-class="opacity-100 translate-y-0"
-        leave-active-class="transition duration-300"
-        leave-from-class="opacity-100 translate-y-0"
-        leave-to-class="opacity-0 -translate-y-3"
-    >
-        <div
-            v-if="showMessage"
-            class="fixed top-6 left-1/2 -translate-x-1/2 z-50
-                   bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg"
-            :class="{'bg-green-600' : successMessage,
-                     'bg-red-600' : errorMessage}"
-        >
-            {{ successMessage ? successMessage : errorMessage }}
-        </div>
-    </Transition>
-
+    <NotificationToast />
     <section class="border p-4 rounded-lg shadow-md bg-background">
 
         <div class="flex items-center justify-between mb-4">

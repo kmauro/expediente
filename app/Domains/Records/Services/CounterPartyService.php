@@ -22,7 +22,7 @@ class CounterPartyService
         return $this->counterpartyRepository->createGetId($newCounterpartyData);
     }
 
-    public function createCounterparty(array $data) : Counterparty
+    public function create(array $data) : Counterparty
     {
         $newCounterpartyData = NormalizeService::normalizeName($data['name']);
         return $this->counterpartyRepository->create($newCounterpartyData);

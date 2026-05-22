@@ -4,10 +4,9 @@ import Input from '@/Components/ui/input/Input.vue';
 import Button from '@/Components/ui/button/Button.vue';
 import Label from '@/Components/ui/label/Label.vue';
 import Combobox from '@/Components/ui/Combobox/Combobox.vue';
-import { useForm, usePage } from '@inertiajs/vue3';
-import NotificationToast from '@/Components/NotificationToast.vue';
+import { useForm } from '@inertiajs/vue3';
+import NotificationToast from '@/Components/ui/notification-toast/NotificationToast.vue';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
-import { ref, computed } from 'vue';
 
 
 const props = defineProps({
@@ -19,14 +18,10 @@ const props = defineProps({
     counterparties: Object,
 })
 
-const page= usePage()
-const showMessage = ref(false);
-const successMessage = computed(() => page.props.flash.success);
-const errorMessage = computed(() => page.props.flash.error);
-
 defineOptions({
     layout: AppLayout,
 })
+
 const fileForm = useForm({
     title: '',
     number : '',
@@ -43,11 +38,13 @@ const fileForm = useForm({
 
 function submit() {
     fileForm.post('/record/add',{
-        onFinish: () => {
+        onSuccess: () => {
             reset();
             fileForm.errors ?? show();
         },
-    })
+    }, {
+        onError: () => show()
+    });
 }
 
 function reset(){
@@ -63,20 +60,12 @@ function reset(){
     fileForm.area_name= null
     fileForm.associated_doc= ''
 }
-
-function show(){
-    showMessage.value = true;
-    setTimeout(() => {
-        showMessage.value = false;
-    }, 3000);
-}
 </script>
 
 <template>
-    <NotificationToast :show="showMessage" :success="successMessage" :error="errorMessage" />
+    <NotificationToast />
     <div class="flex flex-col w-200 ml-3 items-left justify-left">
-    <form @submit.prevent="submit" class="mt-4 space-y-4">
-
+        <form @submit.prevent="submit" class="mt-4 space-y-4">
             <Label for="title">Titulo de expediente:</Label>
             <Input
             type="text"
@@ -96,9 +85,8 @@ function show(){
             :aria-invalid="Boolean(fileForm.errors.number)"
             />
             <p v-if="fileForm.errors.number" class="text-sm text-destructive">
-                        {{ fileForm.errors.number }}
-                    </p>
-
+                {{ fileForm.errors.number }}
+            </p>
 
             <Label for="state">Estado:</Label>
             <Select id="state" v-model="fileForm.state_id" >
@@ -112,52 +100,52 @@ function show(){
                 </SelectContent>
             </Select>
             <p v-if="fileForm.errors.state_id" class="text-sm text-destructive">
-                        {{ fileForm.errors.state_id }}
-                    </p>
+                {{ fileForm.errors.state_id }}
+            </p>
 
             <Label for="type">Objeto:</Label>
-           <Combobox
-                    id="type"
-                    v-model="fileForm.type_id"
-                    v-model:new-value="fileForm.type_name"
-                    :options="types"
-                    />
-                    <p v-if="fileForm.errors.type_id" class="text-sm text-destructive">
-                        {{ fileForm.errors.type_id }}
-                    </p>
-                    <p v-if="fileForm.errors.type_name" class="text-sm text-destructive">
-                        {{ fileForm.errors.type_name }}
-                    </p>
+            <Combobox
+            id="type"
+            v-model="fileForm.type_id"
+            v-model:new-value="fileForm.type_name"
+            :options="types"
+            />
+            <p v-if="fileForm.errors.type_id" class="text-sm text-destructive">
+                {{ fileForm.errors.type_id }}
+            </p>
+            <p v-if="fileForm.errors.type_name" class="text-sm text-destructive">
+                {{ fileForm.errors.type_name }}
+            </p>
 
 
             <Label for="counterparty">Proveedor/Programa:</Label>
             <Combobox
-                    id="counterparty"
-                    v-model="fileForm.counterparty_id"
-                    v-model:new-value="fileForm.counterparty_name"
-                    :options="counterparties"
-                    />
-                    <p v-if="fileForm.errors.counterparty_id" class="text-sm text-destructive">
-                        {{ fileForm.errors.counterparty_id }}
-                    </p>
-                    <p v-if="fileForm.errors.counterparty_name" class="text-sm text-destructive">
-                        {{ fileForm.errors.counterparty_name }}
-                    </p>
-
+            id="counterparty"
+            v-model="fileForm.counterparty_id"
+            v-model:new-value="fileForm.counterparty_name"
+            :options="counterparties"
+            />
+            <p v-if="fileForm.errors.counterparty_id" class="text-sm text-destructive">
+                {{ fileForm.errors.counterparty_id }}
+            </p>
+            <p v-if="fileForm.errors.counterparty_name" class="text-sm text-destructive">
+                {{ fileForm.errors.counterparty_name }}
+            </p>
 
             <div class="flex space-x-4 mt-5">
-            <div class="w-40 space-y-2">
+                <div class="w-40 space-y-2">
                     <Label for="newDate">Fecha del ultimo pase:</Label>
                     <Input
                     type="date"
                     id="newDate"
                     v-model="fileForm.created_at"
+                    :aria-invalid="Boolean(fileForm.errors.created_at)"
                     />
                     <p v-if="fileForm.errors.created_at" class="text-sm text-destructive">
                         {{ fileForm.errors.created_at }}
                     </p>
-
                 </div>
+
                 <div class="w-80 space-y-2">
                     <Label>Area destinataria:</Label>
                     <Combobox
@@ -172,35 +160,22 @@ function show(){
                     <p v-if="fileForm.errors.area_name" class="text-sm text-destructive">
                         {{ fileForm.errors.area_name }}
                     </p>
-
                 </div>
+
                 <div class="w-80 space-y-2">
                     <Label for="doc">Descripción del ultimo pase:</Label>
                     <Input
                     type="text"
                     id="doc"
                     v-model="fileForm.associated_doc"
+                    :aria-invalid="Boolean(fileForm.errors.associated_doc)"
                     />
                     <p v-if="fileForm.errors.associated_doc" class="text-sm text-destructive">
                         {{ fileForm.errors.associated_doc }}
                     </p>
                 </div>
             </div>
-
             <Button :disabled="fileForm.processing" type="submit" >Agregar expediente</Button>
-    </form>
+        </form>
     </div>
 </template>
-
-
-
-<!--<Select id="area" v-model="fileForm.destination">
-                    <SelectTrigger class="w-full">
-                        <SelectValue placeholder="Selecciona un area" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem v-for="area in areas" :key="area.id" :value="area.name">
-                            {{ area.name }}
-                        </SelectItem>
-                    </SelectContent>
-                </Select>-->

@@ -18,42 +18,31 @@ class ConfigController extends Controller
 {
     public function addState(StateRequest $request, StateService $stateService) : RedirectResponse
     {
-        $new = $stateService->createState($request->validatedStateData());
-        if($new){
-            return back()->with('success','Se ha creado el estado de forma exitosa.');
-        }else{
-            return back()->with('error', 'No se pudo crear el estado, intente nuevamente.');
-        }
+        return $this->response($request, $stateService, 'estado');
     }
 
     public function addType(TypeRequest $request, TypeService $typeService) : RedirectResponse
     {
-        dd($request->validatedTypeData());
-        $new = $typeService->createType($request->validatedTypeData());
-        if($new){
-            return back()->with('success','Se ha creado el objeto de forma exitosa.');
-        }else{
-            return back()->with('error', 'No se pudo crear el objeto, intente nuevamente.');
-        }
+        return $this->response($request, $typeService, 'objeto');
     }
 
     public function addCounterParty(CounterpartyRequest $request, CounterPartyService $counterpartyService) : RedirectResponse
     {
-        $new = $counterpartyService->createCounterparty($request->validatedCounterpartyData());
-        if($new){
-            return back()->with('success','Se ha creado el objeto de forma exitosa.');
-        }else{
-            return back()->with('error', 'No se pudo crear el objeto, intente nuevamente.');
-        }
+        return $this->response($request, $counterpartyService, 'proveedor/programa');
     }
 
     public function addArea(AreaRequest $request, AreaService $areaService) : RedirectResponse
     {
-        $new = $areaService->createArea($request->validatedAreaData());
+        return $this->response($request, $areaService, 'area');
+    }
+
+    private function response($data, $service, string $message) : RedirectResponse
+    {
+        $new = $service->create($data->validatedNewData());
         if($new){
-            return back()->with('success','Se ha creado el area de forma exitosa.');
+            return back()->with('success','Se ha creado el '. $message .' de forma exitosa.');
         }else{
-            return back()->with('error', 'No se pudo crear el area, intente nuevamente.');
+            return back()->with('error', 'No se pudo crear el '. $message .', intente nuevamente.');
         }
     }
 

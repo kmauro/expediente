@@ -40,7 +40,7 @@ class TypeRequest extends FormRequest
     /**
      * @return array{name: string}
      */
-    public function validatedTypeData(): array
+    public function validatedNewData(): array
     {
         /** @var array{name: string} $validated */
         $validated = $this->validated();

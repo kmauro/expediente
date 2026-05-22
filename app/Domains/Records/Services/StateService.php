@@ -10,7 +10,7 @@ class StateService
 {
     public function __construct(protected StateRepository $stateRepository) {}
 
-    public function createState(array $data) : State
+    public function create(array $data) : State
     {
         return $this->stateRepository->create($data);
     }

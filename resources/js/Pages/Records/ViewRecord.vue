@@ -1,11 +1,11 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { usePage, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import { Edit, CircleXIcon } from 'lucide-vue-next';
 import Input from '@/Components/ui/input/Input.vue';
 import Button from '@/Components/ui/button/Button.vue';
-import NotificationToast from '@/Components/NotificationToast.vue';
+import NotificationToast from '@/Components/ui/notification-toast/NotificationToast.vue';
 import Label from '@/Components/ui/label/Label.vue';
 import {
   Select,
@@ -25,71 +25,18 @@ const props = defineProps({
     record: Object,
     date: String,
     history: Array,
+    types: Object,
+    states: Object,
+    counterparties: Object,
+    areas: Object,
 })
 const record = props.record
 
-
-//mocked data
-const objects = [{
-    id : 1,
-    name : "Contencioso",
-},{
-    id : 2,
-    name : "Rendiciones",
-},{
-    id : 3,
-    name : "Legítimo",
-}]
-
-const states = [{
-    id : 1,
-    name : "En buzón",
-},{
-    id : 2,
-    name : "Enviado",
-},{
-    id : 3,
-    name : "Pendiente",
-},{
-    id : 4,
-    name : "Terminado",
-}]
-
-const counterparties = [{
-    id : 1,
-    name : "Pampa Azul",
-},{
-    id : 2,
-    name : "Innova-T",
-},{
-    id : 3,
-    name : "Otro",
-}]
-
-const areas = [{
-    id : 1,
-    name : "Rendiciones",
-},{
-    id : 2,
-    name : "Despacho",
-},{
-    id : 3,
-    name : "Contables",
-},{
-    id : 4,
-    name : "Contencioso",
-}]
-
-//end mocked data
-
-const page = usePage();
-const successMessage = computed(() => page.props.flash.success);
-const errorMessage = computed(() => page.props.flash.error);
-const showMessage = ref(false);
-
 const isEditing = ref(false);
 
-const last_movement = record.updated_at + ' - Enviado a ' + areas[record.last_area_id].name;
+//const last_movement = record.updated_at + ' - Enviado a ' + props.areas[record.last_area_id].name;
+
+const last_movement = '';
 
 const recordForm = useForm({
     id: record.id,
@@ -99,30 +46,19 @@ const recordForm = useForm({
     date: record.date,
     pases: record.pases,
     last_movement: last_movement,
-    object: record.type_id,
+    type: record.type_id,
     counterparty: record.counterparty_id,
     destination: null,
 
 })
 
 function submit() {
-  recordForm.post('/record/edit', {
-    onFinish: show,
-  })
+  recordForm.post('/record/edit')
 }
-
-function show(){
-    showMessage.value = true;
-    isEditing.value = false;
-    setTimeout(() => {
-        showMessage.value = false;
-    }, 3000);
-}
-
 </script>
 
 <template>
-    <NotificationToast :show="showMessage" :success="successMessage" :error="errorMessage"/>
+    <NotificationToast />
     <section class="border p-4 rounded-lg shadow-md bg-background">
         <div class="flex items-center justify-between mb-4">
             <div class="mb-6 space-y-2">
@@ -180,19 +116,19 @@ function show(){
                 </SelectContent>
             </Select>
 
-            <Label for="object">Objeto:</Label>
-            <Select id="object" v-model="recordForm.object" :disabled="!isEditing">
+            <Label for="type">Objeto:</Label>
+            <Select id="type" v-model="recordForm.type" :disabled="!isEditing">
                 <SelectTrigger class="w-full">
                     <SelectValue placeholder="Selecciona un objeto" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem v-for="object in objects" :key="object.id" :value="object.id">
-                        {{ object.name }}
+                    <SelectItem v-for="type in types" :key="type.id" :value="type.id">
+                        {{ type.name }}
                     </SelectItem>
                 </SelectContent>
             </Select>
-            <p v-if="recordForm.errors.object" class="text-sm text-destructive">
-                {{ recordForm.errors.object }}
+            <p v-if="recordForm.errors.type" class="text-sm text-destructive">
+                {{ recordForm.errors.type }}
             </p>
 
             <Label for="counterparty">Proveedor/Programa:</Label>

@@ -18,19 +18,12 @@ use Inertia\Response as InertiaResponse;
 
 class RecordController extends Controller
 {
-
-    private StateService $stateService;
-    private CounterPartyService $counterpartyService;
-    private TypeService $typeService;
-    private AreaService $areaService;
-
-    public function __construct(AreaService $areaService, StateService $stateService, CounterPartyService $counterpartyService, TypeService $typeService )
-    {
-        $this->stateService = $stateService;
-        $this->counterpartyService = $counterpartyService;
-        $this->typeService = $typeService;
-        $this->areaService = $areaService;
-    }
+    public function __construct(
+        protected AreaService $areaService,
+        protected StateService $stateService,
+        protected CounterPartyService $counterpartyService,
+        protected TypeService $typeService)
+    {}
 
     public function showAddRecords() : InertiaResponse
     {
@@ -55,6 +48,10 @@ class RecordController extends Controller
     {
         $record = $recordService->getRecordById($id);
         $history = $record->recordMovement()->with('area')->orderBy('moved_at', 'desc')->get();
+        $states = $this->stateService->getAll();
+        $counterparties = $this->counterpartyService->getAll();
+        $types = $this->typeService->getAll();
+        $areas = $this->areaService->getAll();
 
         if(!$record) {
             return back()->with('error', 'Expediente no encontrado.');
@@ -64,6 +61,10 @@ class RecordController extends Controller
             'record' => $record,
             'date' => now()->format('Y-m-d'),
             'history' => $history,
+            'states' => $states,
+            'counterparties' => $counterparties,
+            'types' => $types,
+            'areas' => $areas,
         ]);
     }
 

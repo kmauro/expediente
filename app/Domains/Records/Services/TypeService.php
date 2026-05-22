@@ -16,15 +16,15 @@ class TypeService
         return $this->typeRepository->getAll();
     }
 
-    public function createGetId(array $data) : int
+    public function createGetId(string $name) : int
     {
-        $newTypeData = NormalizeService::normalizeName($data['name']);
+        $newTypeData = NormalizeService::normalizeName($name);
         return $this->typeRepository->createGetId($newTypeData);
     }
 
-    public function createType(string $name) : Type
+    public function create(array $data) : Type
     {
-        $newTypeData = NormalizeService::normalizeName($name);
+        $newTypeData = NormalizeService::normalizeName($data['name']);
         return $this->typeRepository->create($newTypeData);
     }
 }

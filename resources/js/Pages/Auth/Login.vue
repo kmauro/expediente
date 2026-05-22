@@ -4,7 +4,7 @@ import { Button } from '@/Components/ui/button'
 import { Checkbox } from '@/Components/ui/checkbox'
 import { Input } from '@/Components/ui/input'
 import { Label } from '@/Components/ui/label'
-import {  useForm } from '@inertiajs/vue3'
+import { useForm } from '@inertiajs/vue3'
 import { LogIn } from 'lucide-vue-next'
 
 defineProps({

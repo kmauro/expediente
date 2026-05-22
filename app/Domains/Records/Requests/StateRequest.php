@@ -42,7 +42,7 @@ class StateRequest extends FormRequest
     /**
      * @return array{name: string, color: string}
      */
-    public function validatedStateData(): array
+    public function validatedNewData(): array
     {
         /** @var array{name: string, color: string} $validated */
         $validated = $this->validated();

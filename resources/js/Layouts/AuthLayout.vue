@@ -1,7 +1,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3'
 import ThemeToggle from '@/Components/ThemeToggle.vue'
-import ApplicationLogo from '@/Components/ui/ApplicationLogo.vue';
+import  ApplicationLogo from '@/Components/ui/application-logo/ApplicationLogo.vue';
 
 defineProps({
   title: String,
