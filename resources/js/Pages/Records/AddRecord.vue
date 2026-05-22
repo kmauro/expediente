@@ -40,10 +40,7 @@ function submit() {
     fileForm.post('/record/add',{
         onSuccess: () => {
             reset();
-            fileForm.errors ?? show();
         },
-    }, {
-        onError: () => show()
     });
 }
 
