@@ -8,6 +8,7 @@ use Inertia\Inertia;
 
 Route::middleware('guest')->controller(UserController::class)->group(function () {
     Route::get('/login', 'showLogin')->name('login');
+
     Route::get('/signup', 'showSignup')->name('signup');
 
     Route::post('/login', 'login')->name('login.store');
@@ -53,6 +54,11 @@ Route::post('/logout', [UserController::class, 'logout'])
 
 Route::middleware('auth')->group(function () {
     Route::get('/homepage', function () {
+        return Inertia::render('Home', [
+            'title' => 'Inicio',
+        ]);
+    })->name('home');
+    Route::get('/', function () {
         return Inertia::render('Home', [
             'title' => 'Inicio',
         ]);
