@@ -50,7 +50,7 @@ const records = props.data
         <div>
             <Link
             view-transition
-            :href="`/record/${record.id}`"
+            :href="`/records/${record.id}`"
             class="flex items-center bg-primary text-white font-semibold hover:bg-primary/10 gap-2 rounded-lg px-3 py-2 text-sm text-sidebar-foreground"
         >
             <span>Ver mas</span>

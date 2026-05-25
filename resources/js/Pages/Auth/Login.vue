@@ -62,11 +62,6 @@ function submit() {
         <p v-if="form.errors.password" class="text-sm text-destructive">{{ form.errors.password }}</p>
       </div>
 
-      <Label for="remember" class="flex cursor-pointer items-center gap-3 text-muted-foreground">
-        <Checkbox id="remember" v-model="form.remember" name="remember" />
-        Recordarme
-      </Label>
-
       <Button type="submit" class="w-full" :disabled="form.processing">
         <LogIn class="size-4" />
         {{ form.processing ? 'Ingresando...' : 'Ingresar' }}

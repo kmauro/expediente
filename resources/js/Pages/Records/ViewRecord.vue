@@ -44,8 +44,6 @@ const lastMovement = props.history.find(movement => movement.id === record.last_
 
 const last_movement_label = lastMovement.moved_at + ' enviado a ' + props.areas[lastMovement.to_area_id - 1].name + ': ' + lastMovement.associated_doc;
 
-
-
 const recordForm = useForm({
     id: record.id,
     number: record.number,

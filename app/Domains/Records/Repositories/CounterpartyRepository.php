@@ -7,15 +7,15 @@ use Illuminate\Support\Collection;
 
 class CounterpartyRepository
 {
-
-    public function create(array $data) : Counterparty
+    public function create(array $data): Counterparty
     {
         return Counterparty::create($data);
     }
 
-    public function createGetId(array $data) : int
+    public function createGetId(array $data): int
     {
-        $newCounterparty =  Counterparty::create($data);
+        $newCounterparty = Counterparty::create($data);
+
         return $newCounterparty->id;
     }
 
@@ -24,4 +24,8 @@ class CounterpartyRepository
         return Counterparty::all();
     }
 
+    public function getById(int $id): Counterparty
+    {
+        return Counterparty::findOrFail($id);
+    }
 }

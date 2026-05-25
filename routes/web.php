@@ -1,8 +1,8 @@
 <?php
 
 use App\Domains\Records\Controllers\ConfigController;
-use App\Domains\Users\Controllers\UserController;
 use App\Domains\Records\Controllers\RecordController;
+use App\Domains\Users\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -23,7 +23,7 @@ Route::middleware('auth')->controller(UserController::class)->group(function () 
     Route::post('/profile/updatePassword', 'updatePassword')->name('profile.updatePassword');
 });
 
-Route::middleware('auth')->controller(ConfigController::class)->group(function (){
+Route::middleware('auth')->controller(ConfigController::class)->group(function () {
     Route::post('/config/addArea', 'addArea')->name('area.add');
     Route::post('/config/addType', 'addType')->name('type.add');
     Route::post('/config/addCounterparty', 'addCounterparty')->name('counterparty.add');
@@ -32,9 +32,9 @@ Route::middleware('auth')->controller(ConfigController::class)->group(function (
 
 Route::middleware('auth')->controller(RecordController::class)->group(function () {
     Route::get('/records', 'index')->name('records.index');
-    Route::get('/records/add', 'showAddRecords')->name('records.add');
+    Route::get('/file/add', 'showAddRecords')->name('file.add');
     Route::get('/record/add', 'showAddRecord')->name('record.add');
-    Route::get('/record/{id}', 'showRecord')->name('record.show');
+    Route::get('/records/{id}', 'showRecord')->name('record.show');
     Route::get('/report/generate', 'showGenerateReport')->name('report.generate');
 
     Route::post('/records/add', 'addRecords')->name('add.records');
@@ -42,21 +42,19 @@ Route::middleware('auth')->controller(RecordController::class)->group(function (
     Route::post('/record/edit', 'updateRecord')->name('record.update');
     Route::post('/record/delete', 'deleteRecord')->name('record.delete');
     Route::post('/record/addmovement', 'addMovement')->name('movement.add');
-    Route::post('/report/download', 'downloadGeneratedReport')->name('report.download');
+    Route::post('/report/search', 'searchReport')->name('report.search');
+    Route::post('/report/generate', 'generateReport')->name('report.generate.post');
+    Route::post('/report/download', 'downloadExcelReport')->name('report.generate.excel');
 });
 
 Route::post('/logout', [UserController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
 
-    Route::middleware('auth')->group(function () {
-    Route::get('/', function () {
+Route::middleware('auth')->group(function () {
+    Route::get('/homepage', function () {
         return Inertia::render('Home', [
             'title' => 'Inicio',
         ]);
     })->name('home');
 });
-
-
-
-

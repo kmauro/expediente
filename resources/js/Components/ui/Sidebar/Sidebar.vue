@@ -32,10 +32,10 @@ defineEmits(['toggle-sidebar'])
 const page = usePage()
 
 const items = [
-      { label: 'Inicio', icon: Home, href: '/' },
+      { label: 'Inicio', icon: Home, href: '/homepage' },
       { label: 'Expedientes', icon: FileText, href: '/records' },
       { label: 'Agregar', icon: Plus, href: '/record/add'},
-      { label: 'Cargar Archivo', icon: ArrowUpToLineIcon, href: '/records/add'},
+      { label: 'Cargar Archivo', icon: ArrowUpToLineIcon, href: '/file/add'},
       { label: 'Generar reporte', icon: BookCheckIcon, href: '/report/generate'}
 ]
 
@@ -49,7 +49,7 @@ const userInitials = computed(() => {
 
 <template>
   <aside class="min-h-full w-80 shrink-0 flex-col gap-0  bg-background text-sidebar-foreground lg:flex">
-    <Link href="/" view-transition replace class="flex items-center gap-3 border-b border-sidebar-border p-6 pb-3">
+    <Link href="/homepage" view-transition replace class="flex items-center gap-3 border-b border-sidebar-border p-6 pb-3">
         <ApplicationLogo />
 
     </Link>
@@ -62,7 +62,7 @@ const userInitials = computed(() => {
             view-transition
             :href="item.href || '#'"
             :class="{
-            'bg-primary text-white font-semibold': $page.url === item.href,
+            'bg-primary text-white font-semibold': $page.url.startsWith(item.href),
             'hover:bg-primary/10': $page.url !== item.href,
             }"
             class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-sidebar-foreground"
