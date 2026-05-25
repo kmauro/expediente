@@ -11,9 +11,10 @@ class AreaService
 {
     public function __construct(protected AreaRepository $areaRepository) {}
 
-    public function getAll() : Collection
+    public function create(array $data) : Area
     {
-        return $this->areaRepository->getAll();
+        $newAreaData = NormalizeService::normalizeName($data['name']);
+        return $this->areaRepository->create($newAreaData);
     }
 
     public function createGetId(string $name) : int
@@ -22,9 +23,8 @@ class AreaService
         return $this->areaRepository->createGetId($newAreaData);
     }
 
-    public function create(array $data) : Area
+    public function getAll() : Collection
     {
-        $newAreaData = NormalizeService::normalizeName($data['name']);
-        return $this->areaRepository->create($newAreaData);
+        return $this->areaRepository->getAll();
     }
 }

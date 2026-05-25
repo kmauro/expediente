@@ -6,7 +6,6 @@ use App\Domains\Records\Repositories\RecordRepository;
 use App\Domains\Records\Models\Record;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Date;
 
 class RecordService
 {
@@ -18,17 +17,31 @@ class RecordService
         protected StateService $stateService,
         ) {}
 
-
-    public function getAllRecords() : Collection
+    private function createRecordArray(string $number, string $title, int $stateId, int $typeId, int $counterpartyId, string $createdUpdatedAt) : array
     {
-        return $this->recordRepository->getAllForIndex();
+        $newRecord = [
+            'number' => $number,
+            'title' => $title,
+            'state_id' => $stateId,
+            'type_id' => $typeId,
+            'counterparty_id' => $counterpartyId,
+            'created_at' => $createdUpdatedAt,
+            'updated_at' => $createdUpdatedAt
+        ];
+        return $newRecord;
     }
 
-    public function getRecordById(String $id) : Record
+    private function createRecordMovementArray(int $recordId, int $areaId, string $associatedDoc, string $movedAt, int $userId) : array
     {
-        return $this->recordRepository->getRecordById($id);
+        $newRecordMovement = [
+            'record_id' => $recordId,
+            'to_area_id' => $areaId,
+            'associated_doc' => $associatedDoc,
+            'moved_at' => $movedAt,
+            'user_id' => $userId
+        ];
+        return $newRecordMovement;
     }
-
 
     public function addRecord(array $newRecordData) : Record
     {
@@ -50,36 +63,39 @@ class RecordService
 
         $newRecordMovement = $this->createRecordMovementArray($newRecordId, $newRecordData['area_id'], $newRecordData['associated_doc'], $newRecordData['created_at'], Auth::user()->id);
 
-        $newRecordMovementId = $this->recordRepository->newRecordMovement($newRecordMovement);
+        $newRecordMovementId = $this->recordRepository->createRecordMovementGetId($newRecordMovement);
 
         return $this->recordRepository->updateRecordLastMovement($newRecordId, $newRecordMovementId);
     }
 
-    private function createRecordArray(string $number, string $title, int $stateId, int $typeId, int $counterpartyId, string $createdUpdatedAt) : array
+    public function addMovement(array $movementData) : Record
     {
-        $newRecord = [
-            'number' => $number,
-            'title' => $title,
-            'state_id' => $stateId,
-            'type_id' => $typeId,
-            'counterparty_id' => $counterpartyId,
-            'created_at' => $createdUpdatedAt,
-            'updated_at' => $createdUpdatedAt
-        ];
-        return $newRecord;
+        if(!$movementData['area_id'] && !empty($movementData['area_name'])){
+            $movementData['area_id'] = $this->areaService->createGetId($movementData['area_name']);
+        }
+
+        $newRecordMovement = $this->createRecordMovementArray($movementData['id'], $movementData['area_id'], $movementData['associated_doc'], $movementData['date'], Auth::user()->id);
+        $newRecordMovementId = $this->recordRepository->createRecordMovementGetId($newRecordMovement);
+        return $this->recordRepository->updateRecordLastMovement($movementData['id'], $newRecordMovementId);
     }
 
-
-    private function createRecordMovementArray(int $recordId, int $areaId, string $associatedDoc, string $movedAt, int $userId) : array
+    public function updateRecord(array $recordData) : Record
     {
+        return $this->recordRepository->updateRecord($recordData);
+    }
 
-        $newRecordMovement = [
-            'record_id' => $recordId,
-            'to_area_id' => $areaId,
-            'associated_doc' => $associatedDoc,
-            'moved_at' => $movedAt,
-            'user_id' => $userId
-        ];
-        return $newRecordMovement;
+    public function index() : Collection
+    {
+        return $this->recordRepository->getIndex();
+    }
+
+    public function getRecordById(String $id) : Record
+    {
+        return $this->recordRepository->getRecordById($id);
+    }
+
+    public function deleteRecord(int $recordId) : int
+    {
+        return $this->recordRepository->deleteRecord($recordId);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Records\Controllers;
 
+use App\Domains\Records\Requests\RecordMovementRequest;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,6 +13,7 @@ use App\Domains\Records\Services\StateService;
 use App\Domains\Records\Services\CounterPartyService;
 use App\Domains\Records\Services\TypeService;
 use App\Domains\Records\Services\AreaService;
+use App\Domains\Records\Requests\UpdateRecordRequest;
 use Inertia\Inertia;
 
 use Inertia\Response as InertiaResponse;
@@ -25,29 +27,21 @@ class RecordController extends Controller
         protected TypeService $typeService)
     {}
 
-    public function showAddRecords() : InertiaResponse
-    {
-        return Inertia::render('Records/AddRecordsFile', [
-            'title' => 'Agregar Expediente',
-        ]);
-    }
-
     public function index(RecordService $recordService) : InertiaResponse
     {
-        $path = public_path('\json\mockdata.json');
-        $contenido = file_get_contents($path);
-        $datos = json_decode($contenido, true);
-        $records = $recordService->getAllRecords();
+        $records = $recordService->index();
+        $states = $this->stateService->getAll();
         return Inertia::render('Records/index', [
             'title' => 'Lista de Expedientes',
             'data' => $records,
+            'states' => $states
         ]);
     }
 
     public function showRecord(String $id, RecordService $recordService)
     {
         $record = $recordService->getRecordById($id);
-        $history = $record->recordMovement()->with('area')->orderBy('moved_at', 'desc')->get();
+        $history = $record->recordMovement()->orderBy('moved_at', 'asc')->get();
         $states = $this->stateService->getAll();
         $counterparties = $this->counterpartyService->getAll();
         $types = $this->typeService->getAll();
@@ -68,7 +62,88 @@ class RecordController extends Controller
         ]);
     }
 
+    public function updaterecord(UpdateRecordRequest $request, RecordService $recordService): RedirectResponse
+    {
+        $udpated = $recordService->updateRecord($request->validatedRecordData());
+        if ($udpated) {
+            return redirect()
+                ->route('record.show', $udpated->id)
+                ->with('success', 'Expediente modificado correctamente.');
+        }else {
+            return back()->with('error', 'No se pudo modificar el expediente. Inténtalo de nuevo.');
+        }
+    }
 
+    public function addMovement(RecordMovementRequest $request, RecordService $recordService)
+    {
+        $newMovementRecord = $recordService->addMovement($request->validatedNewData());
+        if ($newMovementRecord) {
+            return redirect()
+                ->route('record.show', $newMovementRecord->id)
+                ->with('success', 'Movimiento agregado correctamente.');
+        }else {
+            return back()->with('error', 'No se pudo agregar el movimiento. Inténtalo de nuevo.');
+        }
+    }
+
+    public function deleteRecord(Request $request, RecordService $recordService) : RedirectResponse
+    {
+        $request = $request->validate(['record_id' => ['required', 'int', 'exists:records,id']]);
+        $response = $recordService->deleteRecord($request['record_id']);
+        if($response == 1){
+            return redirect()
+                ->route('records.index')
+                ->with('success', 'Expediente eliminado correctamente.');
+        }else{
+            return back()->with('error', 'No se ha podido eliminar el expediente.');
+        }
+    }
+
+    public function showAddRecord() : InertiaResponse
+    {
+
+        $states = $this->stateService->getAll();
+        $counterparties = $this->counterpartyService->getAll();
+        $types = $this->typeService->getAll();
+        $areas = $this->areaService->getAll();
+
+        return Inertia::render('Records/AddRecord', [
+            'title' => 'Agregar Expediente',
+            'date' => now()->format('Y-m-d'),
+            'states' => $states,
+            'counterparties' => $counterparties,
+            'types' => $types,
+            'areas' => $areas,
+        ]);
+    }
+
+    public function addRecord(RecordRequest $request, RecordService $recordService) : RedirectResponse
+    {
+        $newRecord = $recordService->addRecord($request->validatedRecordData());
+        if ($newRecord) {
+            return back()->with('success', 'Expediente cargado correctamente.');
+        }else {
+            return back()->with('error', 'No se pudo cargar el expediente. Inténtalo de nuevo.');
+        }
+    }
+
+    public function showAddRecords() : InertiaResponse
+    {
+        return Inertia::render('Records/AddRecordsFile', [
+            'title' => 'Agregar Expediente',
+        ]);
+    }
+
+    public function addRecords(Request $request) : RedirectResponse
+    {
+        $user = Auth::user();
+        $user2=null;
+        if ($user) {
+            return back()->with('success', 'Archivo cargado correctamente.');
+        }else {
+            return back()->with('error', 'No se pudo cargar el archivo. Inténtalo de nuevo.');
+        }
+    }
 
     public function showGenerateReport() : InertiaResponse
     {
@@ -89,61 +164,4 @@ class RecordController extends Controller
         }
     }
 
-
-
-
-
-    public function addRecords(Request $request) : RedirectResponse
-    {
-        $user = Auth::user();
-        $user2=null;
-        if ($user) {
-            return back()->with('success', 'Archivo cargado correctamente.');
-        }else {
-            return back()->with('error', 'No se pudo cargar el archivo. Inténtalo de nuevo.');
-        }
-    }
-
-    public function updaterecord(Request $request): RedirectResponse
-    {
-        $user = Auth::user();
-        $user2 = null;
-        if ($user) {
-            return back()->with('success', 'Expediente modificado correctamente.');
-        }else {
-            return back()->with('error', 'No se pudo modificar el expediente. Inténtalo de nuevo.');
-        }
-    }
-
-
-
-
-    public function showAddRecord() : InertiaResponse
-    {
-
-        $states = $this->stateService->getAll();
-        $counterparties = $this->counterpartyService->getAll();
-        $types = $this->typeService->getAll();
-        $areas = $this->areaService->getAll();
-
-        return Inertia::render('Records/AddRecord', [
-            'title' => 'Agregar Expediente',
-            'date' => now()->format('Y-m-d'),
-            'states' => $states,
-            'counterparties' => $counterparties,
-            'types' => $types,
-            'areas' => $areas,
-        ]);
-    }
-
-
-    public function addRecord(RecordRequest $request, RecordService $recordService) : RedirectResponse
-    {
-        $newRecord = $recordService->addRecord($request->validatedRecordData());
-        if ($newRecord) {
-            return back()->with('success', 'Expediente cargado correctamente.');
-        }else {
-            return back()->with('error', 'No se pudo cargar el expediente. Inténtalo de nuevo.');
-        }
-    }
 }

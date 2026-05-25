@@ -11,9 +11,10 @@ class TypeService
 {
     public function __construct(protected TypeRepository $typeRepository) {}
 
-    public function getAll() : Collection
+    public function create(array $data) : Type
     {
-        return $this->typeRepository->getAll();
+        $newTypeData = NormalizeService::normalizeName($data['name']);
+        return $this->typeRepository->create($newTypeData);
     }
 
     public function createGetId(string $name) : int
@@ -22,9 +23,8 @@ class TypeService
         return $this->typeRepository->createGetId($newTypeData);
     }
 
-    public function create(array $data) : Type
+    public function getAll() : Collection
     {
-        $newTypeData = NormalizeService::normalizeName($data['name']);
-        return $this->typeRepository->create($newTypeData);
+        return $this->typeRepository->getAll();
     }
 }

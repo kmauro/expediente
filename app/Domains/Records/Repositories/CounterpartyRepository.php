@@ -8,9 +8,9 @@ use Illuminate\Support\Collection;
 class CounterpartyRepository
 {
 
-    public function getAll(): Collection
+    public function create(array $data) : Counterparty
     {
-        return Counterparty::all();
+        return Counterparty::create($data);
     }
 
     public function createGetId(array $data) : int
@@ -19,8 +19,9 @@ class CounterpartyRepository
         return $newCounterparty->id;
     }
 
-    public function create(array $data) : Counterparty
+    public function getAll(): Collection
     {
-        return Counterparty::create($data);
+        return Counterparty::all();
     }
+
 }

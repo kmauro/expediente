@@ -7,8 +7,8 @@ const page = usePage()
 
 const show = ref(false)
 
-const successMessage = computed(() => page.props.flash?.success ?? null)
-const errorMessage = computed(() => page.props.flash?.error ?? null)
+const successMessage = computed(() => page.props.flash.success ?? null)
+const errorMessage = computed(() => page.props.flash.error ?? null)
 let timeout
 
 watch(
@@ -23,7 +23,8 @@ watch(
                 show.value = false
             }, 3000)
         }
-    }
+    },
+    { immediate: true }
 )
 </script>
 

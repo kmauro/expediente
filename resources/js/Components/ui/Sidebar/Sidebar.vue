@@ -13,7 +13,7 @@ import {
   BookCheckIcon
 } from 'lucide-vue-next'
 import { Link, usePage } from '@inertiajs/vue3'
-
+import { isAdmin } from '@/Composables/isAdmin'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -34,8 +34,8 @@ const page = usePage()
 const items = [
       { label: 'Inicio', icon: Home, href: '/' },
       { label: 'Expedientes', icon: FileText, href: '/records' },
-      { label: 'Cargar Archivo', icon: ArrowUpToLineIcon, href: '/records/add'},
       { label: 'Agregar', icon: Plus, href: '/record/add'},
+      { label: 'Cargar Archivo', icon: ArrowUpToLineIcon, href: '/records/add'},
       { label: 'Generar reporte', icon: BookCheckIcon, href: '/report/generate'}
 ]
 
@@ -94,7 +94,7 @@ const userInitials = computed(() => {
             </Link>
           </DropdownMenuItem>
 
-          <DropdownMenuItem v-if="user.role_id === 1" class="cursor-pointer">
+          <DropdownMenuItem v-if="isAdmin(user.id)" class="cursor-pointer">
             <Link href="/users" view-transition replace class="flex w-full items-center rounded-lg text-sm text-sidebar-foreground">
               <ListIcon class="mr-2 h-4 w-4" />
               <span>Usuarios</span>

@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { ChevronLeftSquare } from 'lucide-vue-next'
-import ThemeToggle from './ThemeToggle.vue';
+import ThemeToggle from '@/Components/ui/theme-toggle/ThemeToggle.vue';
 
 const isRotated = ref(false)
 

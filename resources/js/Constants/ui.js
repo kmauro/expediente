@@ -7,77 +7,77 @@ export const stateClasses = [
         value : 'green',
         label : 'Verde',
         classes: `
-            bg-green-100 text-green-800
+            bg-green-100 text-green-800 border-green-500
             dark:bg-green-900 dark:text-green-200
         `
     },{
         value : 'yellow',
         label : 'Amarillo',
         classes : `
-            bg-yellow-100 text-yellow-800
+            bg-yellow-100 text-yellow-800 border-yellow-500
             dark:bg-yellow-700 dark:text-yellow-200
         `
     },{
         value : 'red',
         label : 'Rojo',
         classes : `
-            bg-red-100 text-red-800
+            bg-red-100 text-red-800 border-red-500
             dark:bg-red-900 dark:text-red-200
         `
     },{
         value : 'violet',
         label : 'Violeta',
         classes :  `
-            bg-violet-100 text-violet-800
+            bg-violet-100 text-violet-800 border-violet-500
             dark:bg-violet-900 dark:text-violet-200
         `
     },{
         value : 'blue',
         label : 'Azul',
         classes : `
-            bg-blue-100 text-blue-800
+            bg-blue-100 text-blue-800 border-blue-500
             dark:bg-blue-900 dark:text-blue-200
         `
     },{
         value : 'orange',
         label : 'Naranja',
         classes : `
-            bg-orange-100 text-orange-800
+            bg-orange-100 text-orange-800 border-orange-500
             dark:bg-orange-900 dark:text-orange-200
         `
     },{
-        value : 'Verde agua',
-        label : 'teal',
+        value : 'teal',
+        label : 'Verde Agua',
         classes : `
-            bg-teal-100 text-teal-800
+            bg-teal-100 text-teal-800 border-teal-500
             dark:bg-teal-900 dark:text-teal-200
         `,
     },{
         value : 'fuchsia',
         label : 'Fucsia',
         classes : `
-            bg-fuchsia-100 text-fuchsia-800
+            bg-fuchsia-100 text-fuchsia-800 border-fuchsia-500
             dark:bg-fuchsia-900 dark:text-fuchsia-200
         `
     },{
         value : 'stone',
         label : 'Gris',
         classes : `
-            bg-stone-200 text-stone-700
+            bg-stone-200 text-stone-700 border-stone-500
             dark:bg-stone-800 dark:text-stone-300
         `
     },{
         value : 'slate',
         label : 'Pizarra',
         classes : `
-            bg-slate-200 text-slate-700
+            bg-slate-200 text-slate-700 border-slate-500
             dark:bg-slate-800 dark:text-slate-200
         `
     },{
         value : 'mist',
         label : 'Neblina',
         classes : `
-            bg-mist-200 text-mist-800
+            bg-mist-200 text-mist-800 border-mist-500
             dark:bg-mist-900 dark:text-mist-200
         `
     }

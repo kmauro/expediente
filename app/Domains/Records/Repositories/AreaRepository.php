@@ -7,9 +7,10 @@ use Illuminate\Support\Collection;
 
 class AreaRepository
 {
-    public function getAll(): Collection
+
+    public function create(array $data) : Area
     {
-        return Area::all();
+        return Area::create($data);
     }
 
     public function createGetId(array $data) : int
@@ -18,8 +19,8 @@ class AreaRepository
         return $newArea->id;
     }
 
-    public function create(array $data) : Area
+    public function getAll(): Collection
     {
-        return Area::create($data);
+        return Area::all();
     }
 }

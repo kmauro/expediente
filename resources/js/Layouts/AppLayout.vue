@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import Sidebar from '@/Components/ui/Sidebar/Sidebar.vue'
-import PageTitle from '@/Components/PageTitle.vue'
+import PageTitle from '@/Components/ui/page-title/PageTitle.vue'
 import { Head } from '@inertiajs/vue3'
 
 const sidebarOpen = ref(true)

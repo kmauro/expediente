@@ -31,6 +31,7 @@ function submit(form, route) {
     form.post(route, {
         onSuccess: () => {
             form.name = null;
+            form.color = null;
         },
     });
 }

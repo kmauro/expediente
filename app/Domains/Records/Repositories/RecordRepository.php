@@ -9,9 +9,39 @@ use App\Domains\Records\Models\RecordMovement;
 
 class RecordRepository
 {
-    public function getAllForIndex() :Collection
+    public function createGetId(array $newRecordData) : int
     {
-        $records = DB::table('records')->select('id','title','number', 'updated_at')->orderBy('updated_at', 'desc')->get();
+        $newRecord = Record::create($newRecordData);
+        return $newRecord->id;
+    }
+
+    public function createRecordMovementGetId(array $newRecordMovement) : int
+    {
+        $newRecordMovement = RecordMovement::create($newRecordMovement);
+        return $newRecordMovement->id;
+    }
+
+    public function updateRecord(array $recordData) : Record
+    {
+        $record = Record::find($recordData['id']);
+        $record->updateOrFail($recordData);
+        return $record;
+    }
+
+    public function updateRecordLastMovement(int $recordId, int $lastMovementId) : Record
+    {
+        $record = Record::find($recordId);
+        $record->last_movement_id = $lastMovementId;
+        $record->save();
+        return $record;
+    }
+
+    public function getIndex() :Collection
+    {
+        $records = DB::table('records')
+        ->select('records.id','title','number', 'updated_at', 'states.color', 'state_id')
+        ->join('states', 'records.state_id', '=', 'states.id')
+        ->orderBy('updated_at', 'desc')->get();
         return $records;
     }
 
@@ -21,29 +51,10 @@ class RecordRepository
         return $record;
     }
 
-    public function addRecord(array $recordData) : Record
+    public function deleteRecord(int $recordId) : int
     {
-        return Record::create($recordData);
-    }
-
-    public function createGetId(array $newRecordData) : int
-    {
-        $newRecord = Record::create($newRecordData);
-        return $newRecord->id;
-    }
-
-    public function newRecordMovement(array $newRecordMovement) : int
-    {
-        $newRecordMovement = RecordMovement::create($newRecordMovement);
-        return $newRecordMovement->id;
-    }
-
-    public function updateRecordLastMovement(int $recordId, int $lastMovementId) : Record
-    {
-        $record = Record::find($recordId);
-        $record->last_movement_id = $lastMovementId;
-        $record->save();
-        return $record;
+        DB::table('records')->delete($recordId);
+        return 1;
     }
 
 

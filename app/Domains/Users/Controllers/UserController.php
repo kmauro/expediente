@@ -23,6 +23,16 @@ use Inertia\Response as InertiaResponse;
 class UserController extends Controller
 {
 
+    private function renderProfile(string $title, Collection $roles, User $user, bool $isCurrentUser, bool $isAdmin = false): InertiaResponse
+    {
+        return Inertia::render('User/Profile', [
+            'title' => $title,
+            'user' => $user->load('role'),
+            'isCurrentUser' => $isCurrentUser,
+            'isAdmin' => $isAdmin,
+            'roles' => $roles,
+        ]);
+    }
 
     public function showSignup(): InertiaResponse
     {
@@ -31,11 +41,39 @@ class UserController extends Controller
         ]);
     }
 
+    public function signup(UserRequest $request, UserService $userService): RedirectResponse
+    {
+        $user = $userService->register($request->validatedUserData());
+        if(! $user) {
+            return back()->with('error', 'No se pudo registrar el usuario. Inténtalo de nuevo.');
+        }
+        Auth::login($user);
+
+        $request->session()->regenerate();
+
+        return to_route('home');
+    }
+
     public function showLogin(): InertiaResponse
     {
         return Inertia::render('Auth/Login', [
             'title' => 'Iniciar Sesión',
         ]);
+    }
+
+    public function login(LoginRequest $request, UserService $userService): RedirectResponse
+    {
+        $credentials = $request->validatedLoginData();
+
+        if (! $userService->authenticate($credentials['username'], $credentials['password'], $request->boolean('remember'))) {
+            throw ValidationException::withMessages([
+                'username' => 'Las credenciales ingresadas no coinciden con nuestros registros.',
+            ]);
+        }
+
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('home'));
     }
 
     public function showSettings(): InertiaResponse
@@ -60,13 +98,13 @@ class UserController extends Controller
             abort(404);
         }
         $isCurrentUser = Auth::id() === $user->id;
-        $isAdmin = Auth::user()->role_id === 1;
+        $isAdmin = Auth::user()->role_id === $userService->getAdminId();
         return $this->renderProfile("Perfil de {$user->name} {$user->surname}", $userService->getAllRoles(), $user, $isCurrentUser, $isAdmin);
     }
 
     public function showProfile(UserService $userService): InertiaResponse
     {
-        $isAdmin = Auth::user()->role_id === 1;
+        $isAdmin = Auth::user()->role_id === $userService->getAdminId();
         $user = $userService->getAuthenticatedUser();
 
         if (! $user) {
@@ -74,17 +112,6 @@ class UserController extends Controller
         }
 
         return $this->renderProfile('Mi Perfil', $userService->getAllRoles(), $user, true, $isAdmin);
-    }
-
-    private function renderProfile(string $title, Collection $roles, User $user, bool $isCurrentUser, bool $isAdmin = false): InertiaResponse
-    {
-        return Inertia::render('User/Profile', [
-            'title' => $title,
-            'user' => $user->load('role'),
-            'isCurrentUser' => $isCurrentUser,
-            'isAdmin' => $isAdmin,
-            'roles' => $roles,
-        ]);
     }
 
     public function updateProfile(UpdateProfileRequest $request, UserService $userService): RedirectResponse
@@ -110,38 +137,6 @@ class UserController extends Controller
         }
 
         return to_route('profile')->with('success', 'Contraseña actualizada correctamente.');
-    }
-
-    public function login(LoginRequest $request, UserService $userService): RedirectResponse
-    {
-        $credentials = $request->validatedLoginData();
-
-        if (! $userService->authenticate($credentials['username'], $credentials['password'], $request->boolean('remember'))) {
-            throw ValidationException::withMessages([
-                'username' => 'Las credenciales ingresadas no coinciden con nuestros registros.',
-            ]);
-        }
-
-        $request->session()->regenerate();
-
-        return redirect()->intended(route('home'));
-    }
-
-
-
-
-
-    public function signup(UserRequest $request, UserService $userService): RedirectResponse
-    {
-        $user = $userService->register($request->validatedUserData());
-        if(! $user) {
-            return back()->with('error', 'No se pudo registrar el usuario. Inténtalo de nuevo.');
-        }
-        Auth::login($user);
-
-        $request->session()->regenerate();
-
-        return to_route('home');
     }
 
     public function logout(Request $request): RedirectResponse

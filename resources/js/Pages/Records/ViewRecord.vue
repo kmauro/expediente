@@ -1,12 +1,15 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { Edit, CircleXIcon } from 'lucide-vue-next';
 import Input from '@/Components/ui/input/Input.vue';
 import Button from '@/Components/ui/button/Button.vue';
 import NotificationToast from '@/Components/ui/notification-toast/NotificationToast.vue';
 import Label from '@/Components/ui/label/Label.vue';
+import { Combobox } from '@/Components/ui/Combobox';
+import { cn } from '@/lib/utils';
+import Alert from '@/Components/ui/alert/Alert.vue';
 import {
   Select,
   SelectContent,
@@ -30,31 +33,82 @@ const props = defineProps({
     counterparties: Object,
     areas: Object,
 })
+
+const page = usePage;
+
 const record = props.record
 
 const isEditing = ref(false);
 
-//const last_movement = record.updated_at + ' - Enviado a ' + props.areas[record.last_area_id].name;
+const lastMovement = props.history.find(movement => movement.id === record.last_movement_id)
 
-const last_movement = '';
+const last_movement_label = lastMovement.moved_at + ' enviado a ' + props.areas[lastMovement.to_area_id - 1].name + ': ' + lastMovement.associated_doc;
+
+
 
 const recordForm = useForm({
     id: record.id,
     number: record.number,
     title: record.title,
-    state: record.state_id,
+    state_id: record.state_id,
     date: record.date,
     pases: record.pases,
-    last_movement: last_movement,
-    type: record.type_id,
-    counterparty: record.counterparty_id,
-    destination: null,
-
+    type_id: record.type_id,
+    counterparty_id: record.counterparty_id,
 })
 
-function submit() {
-  recordForm.post('/record/edit')
+const deleteForm = useForm({
+    record_id:record.id
+})
+
+const movementForm = useForm({
+    id: record.id,
+    date: props.date,
+    area_id: null,
+    area_name: null,
+    associated_doc : null,
+})
+
+function movementLabel(){
+    let pases = []
+    props.history.forEach(pase => {
+        let newPase =  pase.moved_at + ' enviado a '+ props.areas[pase.to_area_id - 1].name + ': ' + pase.associated_doc
+        if(pase.id === record.last_movement_id){
+            newPase = 'Actual: ' + newPase
+        }
+        pases.push(newPase)
+    });
+    return pases;
 }
+
+const pases = movementLabel();
+
+
+function submitUpdate() {
+    recordForm.post('/record/edit', {
+        onSuccess: () => {
+            isEditing.value = false
+        },
+    });
+}
+
+function submitMovement(){
+    movementForm.post('/record/addmovement', {
+        preserveState: false,
+        onSuccess: () => {
+            movementForm.id = record.id,
+            movementForm.date = props.date,
+            movementForm.area_id = null,
+            movementForm.area_name = null,
+            movementForm.associated_doc = null
+        },
+    });
+}
+
+function deleteRecord(){
+    deleteForm.post('/record/delete');
+}
+
 </script>
 
 <template>
@@ -63,8 +117,16 @@ function submit() {
         <div class="flex items-center justify-between mb-4">
             <div class="mb-6 space-y-2">
               <h2 class="text-2xl font-semibold">{{ record.number }}</h2>
-              <p class="text-sm text-muted-foreground">Fecha de creación: {{ record.date }}</p>
+              <p class="text-sm text-muted-foreground">Fecha de creación: {{ record.created_at }}</p>
+              <Alert v-if="isEditing"
+                    @delete-record="deleteRecord"
+                    :label="'Borrar expediente'"
+                    :variant="'destructive'"
+                    :title="'Eliminar expediente?'"
+                    :description="'Esta acción no se puede deshacer. Eliminará la información de este expediente de forma permanente.'"
+                    />
             </div>
+
 
             <Button variant="outline" @click="isEditing = !isEditing" class="ml-auto"
             :class="{
@@ -83,12 +145,11 @@ function submit() {
             </Button>
         </div>
 
-        <form @submit.prevent="submit" class="mt-4 space-y-4">
+        <form @submit.prevent="submitUpdate" class="mt-4 space-y-4">
             <Input
             type="number"
             id="id"
             v-model="recordForm.id"
-            disabled
             hidden
             />
 
@@ -105,7 +166,7 @@ function submit() {
             </p>
 
             <Label for="state">Estado:</Label>
-            <Select id="state" v-model="recordForm.state" :disabled="!isEditing">
+            <Select id="state" v-model="recordForm.state_id" :disabled="!isEditing">
                 <SelectTrigger class="w-full">
                     <SelectValue placeholder="Selecciona un estado" />
                 </SelectTrigger>
@@ -117,7 +178,7 @@ function submit() {
             </Select>
 
             <Label for="type">Objeto:</Label>
-            <Select id="type" v-model="recordForm.type" :disabled="!isEditing">
+            <Select id="type" v-model="recordForm.type_id" :disabled="!isEditing">
                 <SelectTrigger class="w-full">
                     <SelectValue placeholder="Selecciona un objeto" />
                 </SelectTrigger>
@@ -127,12 +188,12 @@ function submit() {
                     </SelectItem>
                 </SelectContent>
             </Select>
-            <p v-if="recordForm.errors.type" class="text-sm text-destructive">
-                {{ recordForm.errors.type }}
+            <p v-if="recordForm.errors.type_id" class="text-sm text-destructive">
+                {{ recordForm.errors.type_id }}
             </p>
 
             <Label for="counterparty">Proveedor/Programa:</Label>
-            <Select id="counterparty" v-model="recordForm.counterparty" :disabled="!isEditing">
+            <Select id="counterparty" v-model="recordForm.counterparty_id" :disabled="!isEditing">
                 <SelectTrigger class="w-full">
                     <SelectValue placeholder="Selecciona un proveedor o programa" />
                 </SelectTrigger>
@@ -142,65 +203,65 @@ function submit() {
                     </SelectItem>
                 </SelectContent>
             </Select>
-            <p v-if="recordForm.errors.counterparty" class="text-sm text-destructive">
-                {{ recordForm.errors.counterparty }}
+            <p v-if="recordForm.errors.counterparty_id" class="text-sm text-destructive">
+                {{ recordForm.errors.counterparty_id }}
             </p>
 
             <Label for="pases">Ultimo pase:</Label>
-            <Input
-            type="text"
-            id="pases"
-            v-model="recordForm.last_movement"
-            disabled
-            :aria-invalid="Boolean(recordForm.errors.last_movement)"
-            />
-            <p v-if="recordForm.errors.last_movement" class="text-sm text-destructive">
-                {{ recordForm.errors.last_movement }}
-            </p>
-
+            <span class="text-muted-foreground opacity-50 " :class="cn('selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 pt-2')">
+            {{last_movement_label}}
+            </span>
             <Button  :disabled="recordForm.processing" type="submit" v-if="isEditing">Actualizar expediente</Button>
-    </form>
+        </form>
+
+        <form  class="flex space-x-4 mt-5" @submit.prevent="submitMovement">
+            <div class="w-40 space-y-2">
+                <Label for="newDate">Fecha del nuevo pase:</Label>
+                <Input
+                type="date"
+                id="newDate"
+                v-model="movementForm.date"
+                />
+                <p v-if="movementForm.errors.date" class="text-sm text-destructive">
+                {{ movementForm.errors.date }}
+            </p>
+            </div>
+
+            <div class="w-80 space-y-2">
+                <Label>Area destinataria:</Label>
+                <Combobox
+                id="area"
+                v-model="movementForm.area_id"
+                v-model:new-value="movementForm.area_name"
+                :options="areas"
+                />
+                <p v-if="movementForm.errors.area_id" class="text-sm text-destructive">
+                    {{ movementForm.errors.area_id }}
+                </p>
+                <p v-if="movementForm.errors.area_name" class="text-sm text-destructive">
+                    {{ movementForm.errors.area_name }}
+                </p>
+            </div>
+            <div class="w-80 space-y-2">
+                <Label for="newPase">Descripción del nuevo pase:</Label>
+                <Input
+                type="text"
+                id="newPase"
+                v-model="movementForm.associated_doc"
+                />
+                <p v-if="movementForm.errors.associated_doc" class="text-sm text-destructive">
+                    {{ movementForm.errors.associated_doc }}
+                </p>
+            </div>
+
+            <Button class="mt-5" :disabled="movementForm.processing" type="submit" >Agregar nuevo pase</Button>
+        </form>
 
 
 
-            <form  class="flex space-x-4 mt-5" @submit.prevent="submit">
-                <div class="w-40 space-y-2">
-                    <Label for="newDate">Fecha del nuevo pase:</Label>
-                    <Input
-                    type="date"
-                    id="newDate"
-                    v-model="props.date"
-                    />
-                </div>
-                <div class="w-80 space-y-2">
-                    <Label for="area">Area destinataria:</Label>
-                    <Select id="area" v-model="recordForm.destination">
-                    <SelectTrigger class="w-full">
-                        <SelectValue placeholder="Selecciona un area" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem v-for="area in areas" :key="area.id" :value="area.name">
-                            {{ area.name }}
-                        </SelectItem>
-                    </SelectContent>
-                </Select>
-                </div>
-                <div class="w-80 space-y-2">
-                    <Label for="newPase">Descripción del nuevo pase:</Label>
-                    <Input
-                    type="text"
-                    id="newPase"
-                    v-model="recordForm.new_pase"
-                    />
-                </div>
-                <Button class="mt-5" :disabled="recordForm.processing" type="submit" >Agregar nuevo pase</Button>
-            </form>
-
-
-
-            <Label class="mt-5" for="date">Historial de pases:</Label>
-                <ul v-for="pase in history" :key="pase.id" class="ml-4 mt-2 list-disc text-sm text-muted-foreground">
-                    <li>{{ pase.moved_at }} Enviado a {{ areas[pase.to_area_id].name }}: {{ pase.associated_doc }} <span v-if="pase.id === history.length-1" >(Actual)</span> </li>
-                </ul>
+        <Label class="mt-5" for="date">Historial de pases:</Label>
+            <ul v-for="pase in pases" :key="pase.id" class="ml-4 mt-2 list-disc text-sm text-muted-foreground">
+                <li>{{ pase }}  </li>
+            </ul>
     </section>
 </template>

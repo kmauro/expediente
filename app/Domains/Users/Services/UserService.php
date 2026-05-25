@@ -11,9 +11,6 @@ class UserService
 {
     public function __construct(protected UserRepository $userRepository) {}
 
-    /**
-     * @param  array{name: string, email: string, password: string, surname: string, username: string, phone: string}  $data
-     */
     public function register(array $data): User
     {
         $user = $this->userRepository->create($data);
@@ -29,26 +26,6 @@ class UserService
             'username' => $username,
             'password' => $password,
         ], $remember);
-    }
-
-    public function getAuthenticatedUser(): ?User
-    {
-        return Auth::user();
-    }
-
-    public function getAllUsers(): Collection
-    {
-        return $this->userRepository->all();
-    }
-
-    public function getAllRoles(): Collection
-    {
-        return $this->userRepository->getAllRoles();
-    }
-
-    public function getUserById(int $id): ?User
-    {
-        return $this->userRepository->find($id);
     }
 
     public function updateProfile(int $userId, array $data): User
@@ -75,4 +52,31 @@ class UserService
 
         return true;
     }
+
+    public function getAllUsers(): Collection
+    {
+        return $this->userRepository->all();
+    }
+
+    public function getAuthenticatedUser(): ?User
+    {
+        return Auth::user();
+    }
+
+    public function getAllRoles(): Collection
+    {
+        return $this->userRepository->getAllRoles();
+    }
+
+    public function getUserById(int $id): ?User
+    {
+        return $this->userRepository->find($id);
+    }
+
+    public function getAdminId() : int
+    {
+        return $this->userRepository->getAdminId();
+    }
+
+
 }

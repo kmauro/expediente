@@ -40,6 +40,8 @@ Route::middleware('auth')->controller(RecordController::class)->group(function (
     Route::post('/records/add', 'addRecords')->name('add.records');
     Route::post('/record/add', 'addRecord')->name('add.record');
     Route::post('/record/edit', 'updateRecord')->name('record.update');
+    Route::post('/record/delete', 'deleteRecord')->name('record.delete');
+    Route::post('/record/addmovement', 'addMovement')->name('movement.add');
     Route::post('/report/download', 'downloadGeneratedReport')->name('report.download');
 });
 

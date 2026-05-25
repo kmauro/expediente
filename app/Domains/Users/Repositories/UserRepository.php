@@ -5,12 +5,21 @@ namespace App\Domains\Users\Repositories;
 use App\Domains\Users\Models\User;
 use App\Domains\Users\Models\Role;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class UserRepository
 {
-    public function findByEmail(string $email): ?User
+
+    public function create(array $data): User
     {
-        return User::where('email', $email)->first();
+        return User::create($data);
+    }
+
+    public function update(int $userId, array $data): User
+    {
+        $user = User::findOrFail($userId);
+        $user->update($data);
+        return $user;
     }
 
     public function find(int $userId): ?User
@@ -18,9 +27,9 @@ class UserRepository
         return User::with('role')->find($userId);
     }
 
-    public function create(array $data): User
+    public function findByEmail(string $email): ?User
     {
-        return User::create($data);
+        return User::where('email', $email)->first();
     }
 
     public function all(): Collection
@@ -34,10 +43,9 @@ class UserRepository
         return Role::all();
     }
 
-    public function update(int $userId, array $data): User
+    public function getAdminId() : int
     {
-        $user = User::findOrFail($userId);
-        $user->update($data);
-        return $user;
+        $admin = DB::table('roles')->where('role_name', '=', 'admin')->first();
+        return $admin->id;
     }
 }

@@ -11,9 +11,10 @@ class CounterPartyService
 {
     public function __construct(protected CounterpartyRepository $counterpartyRepository) {}
 
-    public function getAll() : Collection
+    public function create(array $data) : Counterparty
     {
-        return $this->counterpartyRepository->getAll();
+        $newCounterpartyData = NormalizeService::normalizeName($data['name']);
+        return $this->counterpartyRepository->create($newCounterpartyData);
     }
 
     public function createGetId(string $name) : int
@@ -22,9 +23,8 @@ class CounterPartyService
         return $this->counterpartyRepository->createGetId($newCounterpartyData);
     }
 
-    public function create(array $data) : Counterparty
+    public function getAll() : Collection
     {
-        $newCounterpartyData = NormalizeService::normalizeName($data['name']);
-        return $this->counterpartyRepository->create($newCounterpartyData);
+        return $this->counterpartyRepository->getAll();
     }
 }
