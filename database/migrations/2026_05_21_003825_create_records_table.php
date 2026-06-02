@@ -34,7 +34,7 @@ return new class extends Migration
         Schema::create('records', function(Blueprint $table){
             $table->id();
             $table->string('number')->unique()->index('record_number');
-            $table->string('title');
+            $table->longText('title');
             $table->foreignId('state_id')->constrained('states')->onDelete('cascade');
             $table->foreignId('type_id')->constrained('types')->onDelete('cascade');
             $table->foreignId('counterparty_id')->constrained('counterparties')->onDelete('cascade');

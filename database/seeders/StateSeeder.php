@@ -14,8 +14,11 @@ class StateSeeder extends Seeder
     public function run(): void
     {
         $states = [
-            ['name' => ''],
-            ['color' => ''],
+            ['name' => 'En buzon', 'color' => 'teal'],
+            ['name' => 'Pendiente', 'color' => 'yellow'],
+            ['name' => 'Urgente', 'color' => 'red'],
+            ['name' => 'Enviado', 'color' => 'green'],
+            ['name' => 'Finalizado', 'color' => 'mist'],
         ];
 
         foreach ($states as $state) {

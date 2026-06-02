@@ -19,7 +19,7 @@ class RecordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => ['required', 'string', 'max:255'],
+            'title' => ['required', 'string', 'max:2500'],
             'number' => ['required', 'string', 'max:255', Rule::unique(Record::class, 'number')],
             'state_id' => ['required', 'integer', 'exists:states,id'],
             'type_id' => ['nullable', 'integer', 'exists:types,id'],

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domains\Records\Services;
+namespace App\Domains\Files\Services;
 
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
@@ -9,7 +9,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ExcelReportService implements FromArray, WithHeadings, WithColumnWidths, WithCustomStartCell
+class ExcelReportService implements FromArray, WithColumnWidths, WithCustomStartCell, WithHeadings
 {
     protected array $records;
 
@@ -25,7 +25,7 @@ class ExcelReportService implements FromArray, WithHeadings, WithColumnWidths, W
             'title' => $record['title'] ?? '',
             'type' => $record['type'] ?? '',
             'counterparty' => $record['counterparty'] ?? '',
-            'updated_at' => $record['updated_at'] ?? '',
+            'updated_at' => $record['last_movement'] ?? '',
             'history' => $this->formatHistory($record['history'] ?? 'No hay movimientos'),
         ], $this->records);
     }
@@ -50,12 +50,12 @@ class ExcelReportService implements FromArray, WithHeadings, WithColumnWidths, W
             'C' => 50,
             'D' => 20,
             'E' => 25,
-            'F' => 20,
-            'G' => 60
+            'F' => 40,
+            'G' => 60,
         ];
     }
 
-    private function formatHistory(array $history) : string
+    private function formatHistory(array $history): string
     {
         $history = collect($history)
             ->map(fn (array $movement): string => sprintf(
@@ -65,6 +65,7 @@ class ExcelReportService implements FromArray, WithHeadings, WithColumnWidths, W
                 $movement['associated_doc'] ?? '',
             ))
             ->implode("\n", $history);
+
         return $history;
     }
 

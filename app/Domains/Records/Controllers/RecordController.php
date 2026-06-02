@@ -13,11 +13,8 @@ use App\Domains\Records\Services\TypeService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
-use Maatwebsite\Excel\Facades\Excel;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class RecordController extends Controller
 {
@@ -28,15 +25,22 @@ class RecordController extends Controller
         protected TypeService $typeService,
         protected RecordService $recordService, ) {}
 
-    public function index(): InertiaResponse
+    public function index(Request $request): InertiaResponse
     {
-        $records = $this->recordService->index();
+        $records = $this->recordService->index($request);
         $states = $this->stateService->getAll();
+        $fields = $this->recordService->getFields();
 
         return Inertia::render('Records/index', [
             'title' => 'Lista de Expedientes',
-            'data' => $records,
+            'records' => $records,
             'states' => $states,
+            'fields' => $fields,
+            'filters' => [
+                'field' => $request->field ?? 'number',
+                'search' => $request->search ?? '',
+                'state' => $request->state ?? '',
+            ],
         ]);
     }
 
@@ -135,53 +139,5 @@ class RecordController extends Controller
         return Inertia::render('Records/AddRecordsFile', [
             'title' => 'Agregar Expediente',
         ]);
-    }
-
-    public function addRecords(Request $request): RedirectResponse
-    {
-        $user = Auth::user();
-        $user2 = null;
-        if ($user) {
-            return back()->with('success', 'Archivo cargado correctamente.');
-        } else {
-            return back()->with('error', 'No se pudo cargar el archivo. Inténtalo de nuevo.');
-        }
-    }
-
-    public function showGenerateReport(Request $request): InertiaResponse
-    {
-        if ($request->has('records')) {
-            $records = $request->input('records');
-        } else {
-            $records = [];
-        }
-
-        return Inertia::render('Records/GenerateReport', [
-            'title' => 'Generar Reporte',
-            'date' => now()->format('Y-m-d'),
-            'records' => $records,
-        ]);
-    }
-
-    public function searchReport(Request $request, RecordService $recordService): RedirectResponse
-    {
-        $records = $recordService->searchReport($request->all());
-
-        return redirect()
-            ->route('report.generate', ['records' => $records]);
-    }
-
-    public function downloadExcelReport(Request $request): BinaryFileResponse|RedirectResponse
-    {
-        $validated = $request->validate([
-            'records' => ['required', 'array', 'min:1'],
-        ]);
-
-        $report = $this->recordService->generateExcelReport($validated['records']);
-        if ($report) {
-            return Excel::download($report, 'reporte_expedientes.xlsx');
-        } else {
-            return back()->with('error', 'No se pudo generar el reporte. Inténtalo de nuevo.');
-        }
     }
 }

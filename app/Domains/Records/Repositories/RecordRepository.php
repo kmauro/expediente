@@ -4,6 +4,7 @@ namespace App\Domains\Records\Repositories;
 
 use App\Domains\Records\Models\Record;
 use App\Domains\Records\Models\RecordMovement;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -41,14 +42,26 @@ class RecordRepository
         return $record;
     }
 
-    public function getIndex(): Collection
+    public function getIndexQuery(): Builder
     {
-        $records = DB::table('records')
-            ->select('records.id', 'title', 'number', 'updated_at', 'states.color', 'state_id')
+        return Record::query()
+            ->select('records.id', 'title', 'number', 'updated_at', 'states.color', 'state_id', 'areas.name')
             ->join('states', 'records.state_id', '=', 'states.id')
-            ->orderBy('updated_at', 'desc')->get();
+            ->join('record_movements', 'records.last_movement_id', '=', 'record_movements.id')
+            ->join('areas', 'areas.id', '=', 'record_movements.to_area_id')
+            ->orderBy('updated_at', 'desc');
+    }
 
-        return $records;
+    public function addWhere(Builder $query, string $field, string $operator, string $search): Builder
+    {
+        return $query->where($field, $operator, "%{$search}%");
+    }
+
+    public function addWhereHas(Builder $query, string $table, string $field, string $operator, string $search)
+    {
+        return $query->whereHas($table, function ($q) use ($search, $field, $operator) {
+            $this->addWhere($q, $field, $operator, $search);
+        });
     }
 
     public function getRecordMovements(int $recordId): Collection
@@ -60,6 +73,15 @@ class RecordRepository
             ->orderBy('moved_at', 'asc')->get();
 
         return $movements;
+    }
+
+    public function getLastMovement(int $recordId)
+    {
+        $record = Record::find($recordId);
+        if ($record->last_movement_id) {
+            $recordMovement = RecordMovement::find($record->last_movement_id)->with('area')->first();
+            return $recordMovement->moved_at . ' Enviado a ' . $recordMovement->area->name . ': ' . $recordMovement->associated_doc;
+        }
     }
 
     public function searchReport(array $searchData): Collection

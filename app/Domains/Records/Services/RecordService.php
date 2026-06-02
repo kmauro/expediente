@@ -4,6 +4,7 @@ namespace App\Domains\Records\Services;
 
 use App\Domains\Records\Models\Record;
 use App\Domains\Records\Repositories\RecordRepository;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -87,9 +88,58 @@ class RecordService
         return $this->recordRepository->updateRecord($recordData);
     }
 
-    public function index(): Collection
+    public function getFields(): array
     {
-        return $this->recordRepository->getIndex();
+        $fields = [
+            ['name' => 'number',
+                'label' => 'Numero'],
+            ['name' => 'title',
+                'label' => 'Titulo'],
+            ['name' => 'type_id',
+                'label' => 'Objeto'],
+            ['name' => 'counterparty_id',
+                'label' => 'Proveedor/Programa'],
+            ['name' => 'area_id',
+                'label' => 'Area'],
+        ];
+
+        return $fields;
+    }
+
+    public function index(Request $request)
+    {
+        $search = $request->search;
+        $state = $request->state;
+        $field = $request->field;
+        $query = $this->recordRepository->getIndexQuery();
+        if ($search && $field) {
+            switch ($field) {
+                case 'title':
+                    $this->recordRepository->addWhere($query, 'records.title', 'like', $search);
+                    break;
+                case 'number':
+                    $this->recordRepository->addWhere($query, 'records.number', 'like', $search);
+                    break;
+                case 'type_id':
+                    $this->recordRepository->addWhereHas($query, 'type', 'name', 'like', $search);
+                    break;
+                case 'area_id':
+                    $this->recordRepository->addWhere($query, 'areas.name', 'like', $search);
+                    break;
+                case 'counterparty_id':
+                    $this->recordRepository->addWhereHas($query, 'counterparty', 'name', 'like', $search);
+                    break;
+
+            }
+        }
+
+        // filtro por tag
+        if ($state) {
+            $query->where('state_id', $state['id']);
+        }
+
+        return $query
+            ->get();
     }
 
     public function getRecordMovements(int $recordId): Collection
@@ -97,23 +147,9 @@ class RecordService
         return $this->recordRepository->getRecordMovements($recordId);
     }
 
-    public function searchReport(array $searchData): array
+    public function getLastMovement(int $recordId)
     {
-        $records = $this->recordRepository->searchReport($searchData);
-        $recordsArray = [];
-        foreach ($records as $record) {
-            $recordsArray[] = [
-                'id' => $record->id,
-                'title' => $record->title,
-                'number' => $record->number,
-                'type' => $this->typeService->getById($record->type_id)->name,
-                'history' => $this->getRecordMovements($record->id)->toArray(),
-                'counterparty' => $this->counterpartyService->getById($record->counterparty_id)->name,
-                'updated_at' => $record->updated_at,
-            ];
-        }
-
-        return $recordsArray;
+        return $this->recordRepository->getLastMovement($recordId);
     }
 
     public function getRecordById(string $id): Record
@@ -124,12 +160,5 @@ class RecordService
     public function deleteRecord(int $recordId): int
     {
         return $this->recordRepository->deleteRecord($recordId);
-    }
-
-    public function generateExcelReport(array $reportData): ExcelReportService
-    {
-        $excelFilePath = new ExcelReportService($reportData);
-
-        return $excelFilePath;
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Files\Controllers\FileController;
 use App\Domains\Records\Controllers\ConfigController;
 use App\Domains\Records\Controllers\RecordController;
 use App\Domains\Users\Controllers\UserController;
@@ -33,18 +34,19 @@ Route::middleware('auth')->controller(ConfigController::class)->group(function (
 
 Route::middleware('auth')->controller(RecordController::class)->group(function () {
     Route::get('/records', 'index')->name('records.index');
-    Route::get('/file/add', 'showAddRecords')->name('file.add');
     Route::get('/record/add', 'showAddRecord')->name('record.add');
     Route::get('/records/{id}', 'showRecord')->name('record.show');
-    Route::get('/report/generate', 'showGenerateReport')->name('report.generate');
-
-    Route::post('/records/add', 'addRecords')->name('add.records');
     Route::post('/record/add', 'addRecord')->name('add.record');
     Route::post('/record/edit', 'updateRecord')->name('record.update');
     Route::post('/record/delete', 'deleteRecord')->name('record.delete');
     Route::post('/record/addmovement', 'addMovement')->name('movement.add');
+});
+
+Route::middleware('auth')->controller(FileController::class)->group(function () {
+    Route::get('/file/upload', 'showUploadFile')->name('file.add');
+    Route::get('/report/generate', 'showGenerateReport')->name('report.generate');
+    Route::post('/file/upload', 'uploadFile')->name('add.file');
     Route::post('/report/search', 'searchReport')->name('report.search');
-    Route::post('/report/generate', 'generateReport')->name('report.generate.post');
     Route::post('/report/download', 'downloadExcelReport')->name('report.generate.excel');
 });
 

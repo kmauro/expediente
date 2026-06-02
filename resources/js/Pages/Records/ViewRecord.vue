@@ -1,6 +1,6 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { useForm, usePage } from '@inertiajs/vue3';
+import { useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { Edit, CircleXIcon } from 'lucide-vue-next';
 import Input from '@/Components/ui/input/Input.vue';
@@ -34,15 +34,13 @@ const props = defineProps({
     areas: Object,
 })
 
-const page = usePage;
-
 const record = props.record
 
 const isEditing = ref(false);
 
 const lastMovement = props.history.find(movement => movement.id === record.last_movement_id)
 
-const last_movement_label = lastMovement.moved_at + ' enviado a ' + props.areas[lastMovement.to_area_id - 1].name + ': ' + lastMovement.associated_doc;
+const last_movement_label = movementLabel(lastMovement);
 
 const recordForm = useForm({
     id: record.id,
@@ -67,20 +65,9 @@ const movementForm = useForm({
     associated_doc : null,
 })
 
-function movementLabel(){
-    let pases = []
-    props.history.forEach(pase => {
-        let newPase =  pase.moved_at + ' enviado a '+ props.areas[pase.to_area_id - 1].name + ': ' + pase.associated_doc
-        if(pase.id === record.last_movement_id){
-            newPase = 'Actual: ' + newPase
-        }
-        pases.push(newPase)
-    });
-    return pases;
+function movementLabel(pase){
+    return pase.moved_at + ' enviado a ' + props.areas[pase.to_area_id - 1].name + ': ' + pase.associated_doc;
 }
-
-const pases = movementLabel();
-
 
 function submitUpdate() {
     recordForm.post('/record/edit', {
@@ -258,8 +245,14 @@ function deleteRecord(){
 
 
         <Label class="mt-5" for="date">Historial de pases:</Label>
-            <ul v-for="pase in pases" :key="pase.id" class="ml-4 mt-2 list-disc text-sm text-muted-foreground">
-                <li>{{ pase }}  </li>
+            <ul
+            v-for="pase in props.history"
+            :key="pase.id"
+            class="ml-4 mt-2 text-sm"
+            >
+                <li :class="{'text-muted-foreground' : pase.id != record.last_movement_id,
+                    'font-semibold' : pase.id === record.last_movement_id
+                }" > {{ movementLabel(pase) }}   </li>
             </ul>
     </section>
 </template>

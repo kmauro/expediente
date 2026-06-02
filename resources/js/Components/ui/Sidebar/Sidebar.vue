@@ -35,7 +35,7 @@ const items = [
       { label: 'Inicio', icon: Home, href: '/homepage' },
       { label: 'Expedientes', icon: FileText, href: '/records' },
       { label: 'Agregar', icon: Plus, href: '/record/add'},
-      { label: 'Cargar Archivo', icon: ArrowUpToLineIcon, href: '/file/add'},
+      { label: 'Cargar Archivo', icon: ArrowUpToLineIcon, href: '/file/upload'},
       { label: 'Generar reporte', icon: BookCheckIcon, href: '/report/generate'}
 ]
 

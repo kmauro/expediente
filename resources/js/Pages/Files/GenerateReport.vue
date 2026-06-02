@@ -43,7 +43,6 @@ async function download() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
             },
             body: JSON.stringify({
@@ -52,7 +51,7 @@ async function download() {
         });
 
         if (!response.ok) {
-            throw new Error('No se pudo generar el reporte.');
+            throw new Error(response.statusText);
         }
 
         const blob = await response.blob();
@@ -65,7 +64,7 @@ async function download() {
         link.click();
         link.remove();
         window.URL.revokeObjectURL(url);
-    } finally {
+    }finally {
         isDownloading.value = false;
     }
 }
@@ -105,7 +104,7 @@ async function download() {
                 <TableCell>{{ record.title }}</TableCell>
                 <TableCell>{{ record.type }}</TableCell>
                 <TableCell>{{ record.counterparty}}</TableCell>
-                <TableCell>{{ record.updated_at}}</TableCell>
+                <TableCell>{{ record.last_movement}}</TableCell>
                 <TableCell>
                     <div v-for="pase in record.history" :key="pase.id">
                     <span class="ml-4 mt-2 list-disc text-sm text-muted-foreground">
@@ -116,9 +115,9 @@ async function download() {
             </TableRow>
         </TableBody>
         </Table>
-        <form @submit.prevent="download" class="space-x-2 flex mt-4">
-            <Button type="submit" :disabled="isDownloading">Descargar reporte</Button>
-        </form>
+
+            <Button @click="download" :disabled="isDownloading">Descargar reporte</Button>
+
     </div>
 
 </section>

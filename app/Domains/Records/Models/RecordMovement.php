@@ -4,7 +4,6 @@ namespace App\Domains\Records\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Domains\Users\Models\User;
 
 class RecordMovement extends Model
@@ -26,7 +25,7 @@ class RecordMovement extends Model
 
     public function area() : BelongsTo
     {
-        return $this->belongsTo(Area::class);
+        return $this->belongsTo(Area::class, 'to_area_id', 'id');
     }
 
     public function user() : BelongsTo

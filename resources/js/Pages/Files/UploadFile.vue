@@ -18,7 +18,8 @@ const form = useForm({
 const fileInput = ref(null);
 
 function submit() {
-  form.post('/records/add', {
+  form.post('/file/upload', {
+    forceFormData: true,
     onSuccess: reset,
   })
 }
@@ -35,10 +36,11 @@ function reset(){
     <div class="flex items-center gap-2">
         <span class="text-lg font-semibold">Agregar expedientes</span>
     </div>
-    <div class="flex w-full max-w-lg items-center space-x-2">
-        <form @submit.prevent="submit">
-            <input ref="fileInput" type="file" @change="e => form.file = e.target.files[0]" :class="cn('selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 min-w-0 rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none pt-2')"/>
-            <Button type="submit" :disabled="!form.file"> Aceptar </Button>
+    <div class="flex w-full max-w-lg items-center space-y-2">
+        <form @submit.prevent="submit" class="space-y-2">
+            <input ref="fileInput" type="file" accept=".xlsx,.xls" @change="e => form.file = e.target.files[0]" :class="cn('selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 min-w-0 rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none pt-2')"/>
+            <p v-if="form.errors.file" class="text-sm text-destructive">{{ form.errors.file }}</p>
+            <Button type="submit" :disabled="!form.file || form.processing"> Aceptar </Button>
         </form>
     </div>
 </template>
