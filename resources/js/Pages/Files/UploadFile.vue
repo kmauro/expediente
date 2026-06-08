@@ -11,6 +11,15 @@ defineOptions({
   layout: AppLayout,
 })
 
+const props = defineProps({
+  records: {
+    type: Array,
+    default: () => [],
+  },
+})
+
+const records = ref(props.records);
+
 const form = useForm({
     file: null
 })
@@ -42,5 +51,13 @@ function reset(){
             <p v-if="form.errors.file" class="text-sm text-destructive">{{ form.errors.file }}</p>
             <Button type="submit" :disabled="!form.file || form.processing"> Aceptar </Button>
         </form>
+    </div>
+    <div v-if="records.length > 0" class="mt-6">
+        <span class="text-lg font-semibold">Registros detectados:</span>
+        <ul class="mt-2 list-disc pl-5">
+            <li v-for="(record, index) in records" :key="index">
+                {{ record.title }}
+            </li>
+        </ul>
     </div>
 </template>

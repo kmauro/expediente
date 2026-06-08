@@ -20,17 +20,13 @@ defineProps({
     variant: String,
 })
 
-//defineEmits(['deleteRecord']);
-
-function deleteRecord(){
-    emit('deleteRecord');
-}
-
 </script>
 
 <template>
   <AlertDialog>
-    <AlertDialogTrigger><Button :variant=" variant"><CircleXIcon class="h-4 w-4" /> {{ label }}</Button></AlertDialogTrigger>
+    <AlertDialogTrigger>
+        <Button :variant=" variant"><CircleXIcon class="h-4 w-4" /> {{ label }}</Button>
+    </AlertDialogTrigger>
     <AlertDialogContent>
       <AlertDialogHeader>
         <AlertDialogTitle>{{title}}</AlertDialogTitle>
@@ -40,7 +36,7 @@ function deleteRecord(){
       </AlertDialogHeader>
       <AlertDialogFooter>
         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-        <AlertDialogAction @click="$emit('deleteRecord')">Continuar</AlertDialogAction>
+        <AlertDialogAction @click="$emit('accept')">Continuar</AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
