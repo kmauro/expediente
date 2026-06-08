@@ -104,7 +104,7 @@ function deleteRecord(){
               <h2 class="text-2xl font-semibold">{{ record.number }}</h2>
               <p class="text-sm text-muted-foreground">Fecha de creación: {{ record.created_at }}</p>
               <Alert v-if="isEditing"
-                    @delete-record="deleteRecord"
+                    @accept="deleteRecord"
                     :label="'Borrar expediente'"
                     :variant="'destructive'"
                     :title="'Eliminar expediente?'"
@@ -130,7 +130,7 @@ function deleteRecord(){
             </Button>
         </div>
 
-        <form @submit.prevent="submitUpdate" class="mt-4 space-y-4">
+        <form @submit.prevent="submitUpdate" class="mt-4 space-y-4 w-full max-w-lg">
             <Input
             type="number"
             id="id"
@@ -144,6 +144,7 @@ function deleteRecord(){
             id="title"
             v-model="recordForm.title"
             :disabled = "!isEditing"
+            :class="{ 'truncate' : !isEditing }"
             :aria-invalid="Boolean(recordForm.errors.title)"
             />
             <p v-if="recordForm.errors.title" class="text-sm text-destructive">

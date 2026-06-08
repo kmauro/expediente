@@ -12,6 +12,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class FileService
 {
@@ -48,38 +49,27 @@ class FileService
         return Excel::download($excelFilePath, 'reporte_expedientes.xlsx');
     }
 
-    /**
-     * @return array{
-     *     total_rows: int,
-     *     parsed_rows: array<int, array<int, mixed>>,
-     *     normalized_rows: array<int, array<int, mixed>>
-     * }
-     */
     public function processExcelFile(UploadedFile $file): array
     {
         $filePath = $this->storeUploadedFile($file);
-
         try {
             $sheets = Excel::toCollection(new FileImport, $filePath, 'local');
             $rows = $sheets->first(default: collect());
-            $parsedRows = $this->parseRows($rows);
+            $parsedRows = $this->parseRows($rows->skip(1));
             $normalizedRows = $this->normalizeRows($parsedRows);
+            $newRecords = $this->structureNewRecords($normalizedRows);
+            foreach ($newRecords as $recordData) {
+               $status = $this->recordService->addRecord($recordData);
+            }
         } finally {
             Storage::disk('local')->delete($filePath);
         }
-
         return [
             'total_rows' => count($normalizedRows),
-            'parsed_rows' => $parsedRows,
             'normalized_rows' => $normalizedRows,
         ];
     }
 
-    /**
-     * Sector para parsear la estructura original del Excel.
-     *
-     * @return array<int, array<int, mixed>>
-     */
     private function parseRows(Collection $rows): array
     {
         return $rows
@@ -91,20 +81,37 @@ class FileService
             ->all();
     }
 
-    /**
-     * Sector para normalizar valores antes de persistirlos o validarlos.
-     *
-     * @param  array<int, array<int, mixed>>  $rows
-     * @return array<int, array<int, mixed>>
-     */
     private function normalizeRows(array $rows): array
     {
         return collect($rows)
             ->map(fn (array $row): array => collect($row)
                 ->map(fn (mixed $value): mixed => is_string($value) ? trim($value) : $value)
                 ->map(fn (mixed $value): mixed => $value === '' ? null : $value)
+                ->take(8)
                 ->values()
                 ->all())
+            ->values()
+            ->all();
+    }
+
+    private function structureNewRecords(array $rows): array
+    {
+        return collect($rows)
+            ->map(fn (array $row): array => [
+                'created_at' => Date::excelToDateTimeObject($row[0])->format('Y-m-d') ?? null,
+                'number' => $row[1] ?? null,
+                'title' => $row[2] ?? null,
+                'history' => $row[3] ?? null,
+                'last_movement' => $row[4] ?? null,
+                'area_name' => $row[4] ?? null,
+                'area_id' => null,
+                'associated_doc' => $row[4] ?? null,
+                'type_name' => $row[5] ?? null,
+                'type_id' => null,
+                'counterparty_name' => $row[6] ?? null,
+                'counterparty_id' => null,
+                'state_id' => 1 ?? null,
+            ])
             ->values()
             ->all();
     }
@@ -112,7 +119,6 @@ class FileService
     private function storeUploadedFile(UploadedFile $file): string
     {
         $filePath = $file->store('imports', 'local');
-
         if (! is_string($filePath) || $filePath === '') {
             throw new \RuntimeException('No se pudo guardar temporalmente el archivo importado.');
         }

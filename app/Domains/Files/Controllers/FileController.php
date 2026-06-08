@@ -32,15 +32,15 @@ class FileController extends Controller
             $result = $this->fileService->processExcelFile($validated['file']);
         } catch (Throwable $exception) {
             report($exception);
-
-            return back()->with('error', 'No se pudo leer el archivo Excel. Verifica que el archivo no este vacio o danado.');
+            return back()->with('error', 'No se pudo leer el archivo Excel. Verifica que el archivo no este vacio o dañado.');
         }
 
         if ($result['total_rows'] === 0) {
             return back()->with('error', 'No se encontraron filas para importar en el archivo.');
         }
-
-        return back()->with('success', "Archivo procesado correctamente. Filas detectadas: {$result['total_rows']}.");
+        return redirect()
+            ->route('file.add', ['records' => $result['normalized_rows'][10]])
+            ->with('success', "Archivo procesado correctamente. Filas detectadas: {$result['total_rows']}.");
     }
 
     public function showGenerateReport(Request $request): InertiaResponse
