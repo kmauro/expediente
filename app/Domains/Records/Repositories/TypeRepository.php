@@ -4,6 +4,7 @@ namespace App\Domains\Records\Repositories;
 
 use App\Domains\Records\Models\Type;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class TypeRepository
 {
@@ -27,5 +28,10 @@ class TypeRepository
     public function getById(int $id): Type
     {
         return Type::findOrFail($id);
+    }
+
+    public function getByNormalizedName(string $name)
+    {
+        return DB::table('types')->where('normalized_name', $name)->get('id')->first();
     }
 }

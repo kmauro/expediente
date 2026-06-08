@@ -18,7 +18,7 @@ class UpdateRecordRequest extends FormRequest
     {
         return [
             'id' => ['required', 'int', 'exists:records,id'],
-            'title' => ['required', 'string', 'max:255'],
+            'title' => ['required', 'string'],
             'number' => ['required', 'string', 'max:255', 'exists:records,number'],
             'state_id' => ['required', 'integer', 'exists:states,id'],
             'type_id' => ['required', 'integer', 'exists:types,id'],

@@ -24,6 +24,19 @@ class CounterPartyService
         return $this->counterpartyRepository->createGetId($newCounterpartyData);
     }
 
+    public function findOrCreateGetId(string $name): int
+    {
+        $id = null;
+        $newCounterpartyData = NormalizeService::normalizeName($name);
+        $founded = $this->counterpartyRepository->getByNormalizedName($newCounterpartyData['normalized_name']);
+        if(empty($founded)){
+            $id = $this->counterpartyRepository->createGetId($newCounterpartyData);
+        }else{
+            $id = $founded->id;
+        }
+        return $id;
+    }
+
     public function getAll(): Collection
     {
         return $this->counterpartyRepository->getAll();

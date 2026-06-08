@@ -59,7 +59,7 @@ class FileService
             $normalizedRows = $this->normalizeRows($parsedRows);
             $newRecords = $this->structureNewRecords($normalizedRows);
             foreach ($newRecords as $recordData) {
-               $status = $this->recordService->addRecord($recordData);
+                $this->recordService->addFileRecord($recordData);
             }
         } finally {
             Storage::disk('local')->delete($filePath);

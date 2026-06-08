@@ -16,6 +16,7 @@ defineOptions({
 const props = defineProps({
     title: String,
     records: Object,
+    count: Object,
     filters: Object,
     states: Object,
     fields: Array,
@@ -87,6 +88,9 @@ const selectState = (state) => {
         <p class="text-muted-foreground">No se encontraron expedientes.</p>
     </div>
     <div v-else>
+        <div class="flex items-center justify-center">
+            <p class="text-muted-foreground">{{ props.count }} expedientes encontrados.</p>
+        </div>
         <section v-for="record in records" class="border p-4 rounded-lg shadow-md flex justify-between mb-4" :class="getStateClasses(record.color)" >
             <div class="space-y-2">
                 <h2 class="text-2xl font-semibold">{{ record.number }}</h2>

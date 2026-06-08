@@ -23,6 +23,19 @@ class AreaService
         return $this->areaRepository->createGetId($newAreaData);
     }
 
+    public function findOrCreateGetId(string $name): int
+    {
+        $id = null;
+        $newAreaData = NormalizeService::normalizeName($name);
+        $founded = $this->areaRepository->getByNormalizedName($newAreaData['normalized_name']);
+        if(empty($founded)){
+            $id = $this->areaRepository->createGetId($newAreaData);
+        }else{
+            $id = $founded->id;
+        }
+        return $id;
+    }
+
     public function getAll() : Collection
     {
         return $this->areaRepository->getAll();

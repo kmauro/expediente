@@ -4,6 +4,7 @@ namespace App\Domains\Records\Repositories;
 
 use App\Domains\Records\Models\Area;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class AreaRepository
 {
@@ -17,6 +18,11 @@ class AreaRepository
     {
         $newArea =  Area::create($data);
         return $newArea->id;
+    }
+
+    public function getByNormalizedName(string $name)
+    {
+        return DB::table('areas')->where('normalized_name', $name)->get('id')->first();
     }
 
     public function getAll(): Collection

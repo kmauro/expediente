@@ -46,7 +46,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('record_id')->constrained('records')->onDelete('cascade')->index('record_movement');
             $table->foreignId('to_area_id')->constrained('areas')->onDelete('cascade');
-            $table->string('associated_doc');
+            $table->longText('associated_doc');
             $table->date('moved_at');
             $table->foreignId('user_id')->constrained('users');
         });

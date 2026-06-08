@@ -61,14 +61,33 @@ class RecordService
         }
 
         $newRecord = $this->createRecordArray($newRecordData['number'], $newRecordData['title'], $newRecordData['state_id'], $newRecordData['type_id'], $newRecordData['counterparty_id'], $newRecordData['created_at']);
-
         $newRecordId = $this->recordRepository->createGetId($newRecord);
 
-        $newRecordMovement = $this->createRecordMovementArray($newRecordId, $newRecordData['area_id'], $newRecordData['associated_doc'], $newRecordData['created_at'], Auth::user()->id);
 
+
+        $newRecordMovement = $this->createRecordMovementArray($newRecordId, $newRecordData['area_id'], $newRecordData['associated_doc'], $newRecordData['created_at'], Auth::user()->id);
         $newRecordMovementId = $this->recordRepository->createRecordMovementGetId($newRecordMovement);
 
         return $this->recordRepository->updateRecordLastMovement($newRecordId, $newRecordMovementId, $newRecordData['created_at']);
+    }
+
+    public function addFileRecord(array $recordData): Record
+    {
+        $recordData['type_id'] = $this->typeService->findOrCreateGetId($recordData['type_name']);
+        $recordData['counterparty_id'] = $this->counterpartyService->findOrCreateGetId($recordData['counterparty_name']);
+        $recordData['area_id'] = $this->areaService->findOrCreateGetId($recordData['area_name']);
+
+        $newRecord = $this->createRecordArray($recordData['number'], $recordData['title'], $recordData['state_id'], $recordData['type_id'], $recordData['counterparty_id'], $recordData['created_at']);
+        $newRecordId = $this->recordRepository->createGetId($newRecord);
+
+        $historyRecordMovement = $this->createRecordMovementArray($newRecordId, $recordData['area_id'], $recordData['history'], $recordData['created_at'], Auth::user()->id);
+        $this->recordRepository->createRecordMovementGetId($historyRecordMovement);
+
+        $newRecordMovement = $this->createRecordMovementArray($newRecordId, $recordData['area_id'], $recordData['associated_doc'], $recordData['created_at'], Auth::user()->id);
+        $newRecordMovementId = $this->recordRepository->createRecordMovementGetId($newRecordMovement);
+
+        return $this->recordRepository->updateRecordLastMovement($newRecordId, $newRecordMovementId, $recordData['created_at']);
+
     }
 
     public function addMovement(array $movementData): Record

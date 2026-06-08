@@ -4,6 +4,7 @@ namespace App\Domains\Records\Repositories;
 
 use App\Domains\Records\Models\Counterparty;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class CounterpartyRepository
 {
@@ -27,5 +28,10 @@ class CounterpartyRepository
     public function getById(int $id): Counterparty
     {
         return Counterparty::findOrFail($id);
+    }
+
+    public function getByNormalizedName(string $name)
+    {
+        return DB::table('counterparties')->where('normalized_name', $name)->get('id')->first();
     }
 }

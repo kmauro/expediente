@@ -34,6 +34,7 @@ class RecordController extends Controller
         return Inertia::render('Records/index', [
             'title' => 'Lista de Expedientes',
             'records' => $records,
+            'count' => $records->count(),
             'states' => $states,
             'fields' => $fields,
             'filters' => [

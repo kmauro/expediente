@@ -8,8 +8,8 @@ import Button from '@/Components/ui/button/Button.vue';
 import NotificationToast from '@/Components/ui/notification-toast/NotificationToast.vue';
 import Label from '@/Components/ui/label/Label.vue';
 import { Combobox } from '@/Components/ui/Combobox';
-import { cn } from '@/lib/utils';
 import Alert from '@/Components/ui/alert/Alert.vue';
+import { Textarea } from '@/Components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -100,20 +100,19 @@ function deleteRecord(){
     <NotificationToast />
     <section class="border p-4 rounded-lg shadow-md bg-background">
         <div class="flex items-center justify-between mb-4">
-            <div class="mb-6 space-y-2">
-              <h2 class="text-2xl font-semibold">{{ record.number }}</h2>
-              <p class="text-sm text-muted-foreground">Fecha de creación: {{ record.created_at }}</p>
-              <Alert v-if="isEditing"
+            <div class="space-y-2">
+                <h2 class="text-2xl font-semibold">{{ record.number }}</h2>
+                <p class="text-sm text-muted-foreground">Fecha de creación: {{ record.created_at }}</p>
+            </div>
+            <div class="flex space-x-3">
+                <Alert v-if="isEditing"
                     @accept="deleteRecord"
                     :label="'Borrar expediente'"
                     :variant="'destructive'"
                     :title="'Eliminar expediente?'"
                     :description="'Esta acción no se puede deshacer. Eliminará la información de este expediente de forma permanente.'"
                     />
-            </div>
-
-
-            <Button variant="outline" @click="isEditing = !isEditing" class="ml-auto"
+                <Button variant="outline" @click="isEditing = !isEditing" class="ml-auto"
             :class="{
                 'bg-primary text-white hover:bg-primary/10' : !isEditing,
                 'bg-secondary text-primary hover:bg-secondary/50' : isEditing,
@@ -128,6 +127,8 @@ function deleteRecord(){
                 <p class="ml-2">Cancelar</p>
             </div>
             </Button>
+            </div>
+
         </div>
 
         <form @submit.prevent="submitUpdate" class="mt-4 space-y-4 w-full max-w-lg">
@@ -139,12 +140,11 @@ function deleteRecord(){
             />
 
             <Label for="title">Titulo de expediente:</Label>
-            <Input
+            <Textarea
             type="text"
             id="title"
             v-model="recordForm.title"
             :disabled = "!isEditing"
-            :class="{ 'truncate' : !isEditing }"
             :aria-invalid="Boolean(recordForm.errors.title)"
             />
             <p v-if="recordForm.errors.title" class="text-sm text-destructive">
@@ -194,10 +194,12 @@ function deleteRecord(){
             </p>
 
             <Label for="pases">Ultimo pase:</Label>
-            <span class="text-muted-foreground opacity-50 " :class="cn('selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 pt-2')">
-            {{last_movement_label}}
+            <span class="text-muted-foreground opacity-50">
+                {{last_movement_label}}
             </span>
-            <Button  :disabled="recordForm.processing" type="submit" v-if="isEditing">Actualizar expediente</Button>
+            <div class="mt-3">
+                <Button  :disabled="recordForm.processing" type="submit" v-if="isEditing">Actualizar expediente</Button>
+            </div>
         </form>
 
         <form  class="flex space-x-4 mt-5" @submit.prevent="submitMovement">
