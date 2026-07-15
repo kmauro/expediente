@@ -1,16 +1,19 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import Sidebar from '@/Components/ui/Sidebar/Sidebar.vue'
+import Footer from '@/Components/ui/footer/Footer.vue'
+import NotificationToast from '@/Components/ui/notification-toast/NotificationToast.vue'
 import PageTitle from '@/Components/ui/page-title/PageTitle.vue'
+import Header from '@/Components/ui//header/Header.vue'
+import Sidebar from '@/Components/ui/Sidebar/Sidebar.vue'
 import { Head } from '@inertiajs/vue3'
-
-const sidebarOpen = ref(true)
+import { onMounted, ref } from 'vue'
 
 defineProps({
-    title: String,
+  title: String,
 })
 
-const toggleSidebar = () => {
+const sidebarOpen = ref(false)
+
+function toggleSidebar() {
   sidebarOpen.value = !sidebarOpen.value
 }
 
@@ -20,96 +23,49 @@ onMounted(() => {
 </script>
 
 <template>
-    <Head :title="title" />
-    <div class="app-container">
-        <div class="main-container">
-            <Transition name="sidebar-collapse">
-                <div v-show="sidebarOpen" class="sidebar-wrapper">
-                    <Sidebar :sidebar-open="sidebarOpen" @toggle-sidebar="toggleSidebar" />
-                </div>
-            </Transition>
+  <Head :title="title" />
+  <div class="flex h-dvh flex-col bg-background text-foreground">
+    <Header class="shrink-0" />
 
-                <main :class="sidebarOpen ? 'ml-80' : ''" class="flex-1 flex flex-col">
-                <PageTitle @toggle-sidebar="toggleSidebar" :title="title">
-                    {{ title }}
-                </PageTitle>
-
-                <div class="flex-1 overflow-y-auto p-6">
-                    <slot />
-                </div>
-            </main>
+    <div class="relative flex min-h-0 flex-1 overflow-hidden">
+      <Transition
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="-translate-x-full opacity-0"
+        enter-to-class="translate-x-0 opacity-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="translate-x-0 opacity-100"
+        leave-to-class="-translate-x-full opacity-0"
+      >
+        <div v-show="sidebarOpen" class="absolute inset-y-0 left-0 z-40 lg:block">
+          <Sidebar :sidebar-open="sidebarOpen" @toggle-sidebar="toggleSidebar" />
         </div>
+      </Transition>
+
+      <button
+        v-if="sidebarOpen"
+        type="button"
+        class="absolute inset-0 z-30 bg-black/40 lg:hidden"
+        aria-label="Cerrar navegación"
+        @click="toggleSidebar"
+      />
+
+      <main
+        class="flex min-w-0 flex-1 flex-col transition-[margin] duration-300"
+        :class="sidebarOpen ? 'lg:ml-80' : 'ml-0'"
+      >
+        <PageTitle :title="title" @toggle-sidebar="toggleSidebar">
+          {{ title }}
+        </PageTitle>
+
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          <div class="mx-auto w-full max-w-7xl">
+            <slot />
+          </div>
+        </div>
+      </main>
     </div>
+
+    <Footer class="shrink-0" />
+    <NotificationToast />
+  </div>
 </template>
-
-<style scoped>
-.app-container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-}
-
-.main-container {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-}
-
-.sidebar-wrapper {
-    transform-origin: left;
-}
-
-@media (max-width: 1023px) {
-    .sidebar-wrapper {
-        position: fixed;
-        inset: 0;
-        z-index: 50;
-    }
-}
-
-@media (min-width: 1024px) {
-    .sidebar-wrapper {
-        position: fixed;
-        left: 0;
-        top: 0;
-        height: 100%;
-        z-index: 40;
-    }
-}
-
-/* Animación de colapso de sidebar */
-.sidebar-collapse-enter-active,
-.sidebar-collapse-leave-active {
-    transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-.sidebar-collapse-enter-from,
-.sidebar-collapse-leave-to {
-    transform: scaleX(0);
-    opacity: 0;
-}
-
-.sidebar-collapse-enter-to,
-.sidebar-collapse-leave-from {
-    transform: scaleX(1);
-    opacity: 1;
-}
-
-/* Animación de expansión del contenido */
-.content-expand-enter-active,
-.content-expand-leave-active {
-    transition: margin-left 0.3s ease;
-}
-.content-expand-enter-from,
-.content-expand-leave-to {
-    margin-left: 0;
-}
-.content-expand-enter-to,
-.content-expand-leave-from {
-    margin-left: 20rem; /* Ancho del sidebar */
-}
-
-main {
-    transition: margin-left 0.3s ease;
-}
-</style>
