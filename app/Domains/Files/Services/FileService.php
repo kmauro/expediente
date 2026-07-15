@@ -9,10 +9,10 @@ use App\Domains\Records\Services\RecordService;
 use App\Domains\Records\Services\TypeService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class FileService
 {
@@ -21,6 +21,7 @@ class FileService
         protected CounterPartyService $counterpartyService,
         protected TypeService $typeService,
         protected RecordService $recordService,
+        protected RecordImportMapper $recordImportMapper,
     ) {}
 
     public function searchReport(array $searchData): array
@@ -52,21 +53,30 @@ class FileService
     public function processExcelFile(UploadedFile $file): array
     {
         $filePath = $this->storeUploadedFile($file);
+
         try {
             $sheets = Excel::toCollection(new FileImport, $filePath, 'local');
-            $rows = $sheets->first(default: collect());
-            $parsedRows = $this->parseRows($rows->skip(1));
+            $parsedRows = $sheets
+                ->flatMap(fn (Collection|array $sheet): array => $this->parseRows(collect($sheet)->skip(1)))
+                ->values()
+                ->all();
             $normalizedRows = $this->normalizeRows($parsedRows);
-            $newRecords = $this->structureNewRecords($normalizedRows);
-            foreach ($newRecords as $recordData) {
-                $this->recordService->addFileRecord($recordData);
-            }
+            $newRecords = $this->recordImportMapper->map($normalizedRows);
+            $recordIds = DB::transaction(function () use ($newRecords): array {
+                return collect($newRecords)
+                    ->map(fn (array $recordData): int => $this->recordService->addFileRecord($recordData)->id)
+                    ->unique()
+                    ->values()
+                    ->all();
+            }, attempts: 3);
         } finally {
             Storage::disk('local')->delete($filePath);
         }
+
         return [
-            'total_rows' => count($normalizedRows),
-            'normalized_rows' => $normalizedRows,
+            'total_rows' => count($recordIds),
+            'source_rows' => count($normalizedRows),
+            'skipped_rows' => count($normalizedRows) - count($newRecords),
         ];
     }
 
@@ -90,28 +100,6 @@ class FileService
                 ->take(8)
                 ->values()
                 ->all())
-            ->values()
-            ->all();
-    }
-
-    private function structureNewRecords(array $rows): array
-    {
-        return collect($rows)
-            ->map(fn (array $row): array => [
-                'created_at' => Date::excelToDateTimeObject($row[0])->format('Y-m-d') ?? null,
-                'number' => $row[1] ?? null,
-                'title' => $row[2] ?? null,
-                'history' => $row[3] ?? null,
-                'last_movement' => $row[4] ?? null,
-                'area_name' => $row[4] ?? null,
-                'area_id' => null,
-                'associated_doc' => $row[4] ?? null,
-                'type_name' => $row[5] ?? null,
-                'type_id' => null,
-                'counterparty_name' => $row[6] ?? null,
-                'counterparty_id' => null,
-                'state_id' => 1 ?? null,
-            ])
             ->values()
             ->all();
     }

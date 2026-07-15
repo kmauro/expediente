@@ -5,8 +5,10 @@ namespace App\Domains\Records\Repositories;
 use App\Domains\Records\Models\Record;
 use App\Domains\Records\Models\RecordMovement;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class RecordRepository
 {
@@ -17,11 +19,52 @@ class RecordRepository
         return $newRecord->id;
     }
 
+    public function firstOrCreateRecord(array $recordData): Record
+    {
+        return Record::firstOrCreate(
+            ['number' => $recordData['number']],
+            Arr::except($recordData, ['number']),
+        );
+    }
+
     public function createRecordMovementGetId(array $newRecordMovement): int
     {
         $newRecordMovement = RecordMovement::create($newRecordMovement);
 
         return $newRecordMovement->id;
+    }
+
+    public function firstOrCreateRecordMovementGetId(array $recordMovementData): int
+    {
+        $recordMovement = RecordMovement::firstOrCreate(
+            Arr::except($recordMovementData, ['user_id']),
+            ['user_id' => $recordMovementData['user_id']],
+        );
+
+        return $recordMovement->id;
+    }
+
+    public function updateOrCreateCurrentRecordMovementGetId(Record $record, array $recordMovementData): int
+    {
+        $currentMovement = $record->last_movement_id !== null
+            ? RecordMovement::find($record->last_movement_id)
+            : null;
+
+        if (
+            $currentMovement !== null
+            && $currentMovement->to_area_id === $recordMovementData['to_area_id']
+            && Str::squish($currentMovement->associated_doc) === Str::squish($recordMovementData['associated_doc'])
+        ) {
+            $currentMovement->update([
+                'associated_doc' => $recordMovementData['associated_doc'],
+                'moved_at' => $recordMovementData['moved_at'],
+                'user_id' => $recordMovementData['user_id'],
+            ]);
+
+            return $currentMovement->id;
+        }
+
+        return $this->firstOrCreateRecordMovementGetId($recordMovementData);
     }
 
     public function updateRecord(array $recordData): Record
@@ -38,6 +81,19 @@ class RecordRepository
         $record->last_movement_id = $lastMovementId;
         $record->updated_at = $movedAt;
         $record->save();
+
+        return $record;
+    }
+
+    public function updateRecordLastMovementIfNewer(int $recordId, int $lastMovementId, string $movedAt): Record
+    {
+        $record = Record::findOrFail($recordId);
+
+        if ($record->last_movement_id === null || $movedAt >= (string) $record->updated_at) {
+            $record->last_movement_id = $lastMovementId;
+            $record->updated_at = $movedAt;
+            $record->save();
+        }
 
         return $record;
     }
@@ -80,7 +136,8 @@ class RecordRepository
         $record = Record::find($recordId);
         if ($record->last_movement_id) {
             $recordMovement = RecordMovement::find($record->last_movement_id)->with('area')->first();
-            return $recordMovement->moved_at . ' Enviado a ' . $recordMovement->area->name . ': ' . $recordMovement->associated_doc;
+
+            return $recordMovement->moved_at.' Enviado a '.$recordMovement->area->name.': '.$recordMovement->associated_doc;
         }
     }
 

@@ -10,6 +10,14 @@ use Illuminate\Support\Facades\Auth;
 
 class RecordService
 {
+    private const DEFAULT_COUNTERPARTY_NAME = 'Sin contraparte informada';
+
+    private const DEFAULT_TYPE_NAME = 'Sin objeto informado';
+
+    private ?int $defaultCounterpartyId = null;
+
+    private ?int $defaultTypeId = null;
+
     public function __construct(
         protected RecordRepository $recordRepository,
         protected CounterPartyService $counterpartyService,
@@ -63,8 +71,6 @@ class RecordService
         $newRecord = $this->createRecordArray($newRecordData['number'], $newRecordData['title'], $newRecordData['state_id'], $newRecordData['type_id'], $newRecordData['counterparty_id'], $newRecordData['created_at']);
         $newRecordId = $this->recordRepository->createGetId($newRecord);
 
-
-
         $newRecordMovement = $this->createRecordMovementArray($newRecordId, $newRecordData['area_id'], $newRecordData['associated_doc'], $newRecordData['created_at'], Auth::user()->id);
         $newRecordMovementId = $this->recordRepository->createRecordMovementGetId($newRecordMovement);
 
@@ -73,21 +79,117 @@ class RecordService
 
     public function addFileRecord(array $recordData): Record
     {
-        $recordData['type_id'] = $this->typeService->findOrCreateGetId($recordData['type_name']);
-        $recordData['counterparty_id'] = $this->counterpartyService->findOrCreateGetId($recordData['counterparty_name']);
-        $recordData['area_id'] = $this->areaService->findOrCreateGetId($recordData['area_name']);
+        $userId = Auth::id();
 
-        $newRecord = $this->createRecordArray($recordData['number'], $recordData['title'], $recordData['state_id'], $recordData['type_id'], $recordData['counterparty_id'], $recordData['created_at']);
-        $newRecordId = $this->recordRepository->createGetId($newRecord);
+        if (! is_int($userId)) {
+            throw new \LogicException('La importación de expedientes requiere un usuario autenticado.');
+        }
 
-        $historyRecordMovement = $this->createRecordMovementArray($newRecordId, $recordData['area_id'], $recordData['history'], $recordData['created_at'], Auth::user()->id);
-        $this->recordRepository->createRecordMovementGetId($historyRecordMovement);
+        $typeName = filled($recordData['type_name'] ?? null)
+            ? $recordData['type_name']
+            : self::DEFAULT_TYPE_NAME;
+        $counterpartyName = filled($recordData['counterparty_name'] ?? null)
+            ? $recordData['counterparty_name']
+            : self::DEFAULT_COUNTERPARTY_NAME;
+        $typeId = $this->typeService->findOrCreateGetId($typeName);
+        $counterpartyId = $this->counterpartyService->findOrCreateGetId($counterpartyName);
+        $areaId = $this->areaService->findOrCreateGetId($recordData['area_name']);
+        $newRecordData = $this->createRecordArray(
+            $recordData['number'],
+            $recordData['title'],
+            $recordData['state_id'],
+            $typeId,
+            $counterpartyId,
+            $recordData['created_at'],
+        );
+        $record = $this->recordRepository->firstOrCreateRecord($newRecordData);
 
-        $newRecordMovement = $this->createRecordMovementArray($newRecordId, $recordData['area_id'], $recordData['associated_doc'], $recordData['created_at'], Auth::user()->id);
-        $newRecordMovementId = $this->recordRepository->createRecordMovementGetId($newRecordMovement);
+        $this->updateMissingImportedMetadata(
+            $record,
+            $recordData,
+            $typeId,
+            $counterpartyId,
+        );
 
-        return $this->recordRepository->updateRecordLastMovement($newRecordId, $newRecordMovementId, $recordData['created_at']);
+        $lastMovement = null;
 
+        foreach ($recordData['history'] as $historyEntry) {
+            $historyMovement = $this->createRecordMovementArray(
+                $record->id,
+                $areaId,
+                $historyEntry['associated_doc'],
+                $historyEntry['moved_at'],
+                $userId,
+            );
+            $lastMovement = [
+                'id' => $this->recordRepository->firstOrCreateRecordMovementGetId($historyMovement),
+                'moved_at' => $historyEntry['moved_at'],
+            ];
+        }
+
+        if ($recordData['current_state'] !== null) {
+            $currentMovement = $this->createRecordMovementArray(
+                $record->id,
+                $areaId,
+                $recordData['current_state']['associated_doc'],
+                $recordData['current_state']['moved_at'],
+                $userId,
+            );
+            $lastMovement = [
+                'id' => $this->recordRepository->updateOrCreateCurrentRecordMovementGetId($record, $currentMovement),
+                'moved_at' => $recordData['current_state']['moved_at'],
+            ];
+        }
+
+        if ($lastMovement !== null) {
+            return $this->recordRepository->updateRecordLastMovementIfNewer(
+                $record->id,
+                $lastMovement['id'],
+                $lastMovement['moved_at'],
+            );
+        }
+
+        return $record;
+
+    }
+
+    private function updateMissingImportedMetadata(
+        Record $record,
+        array $recordData,
+        int $typeId,
+        int $counterpartyId,
+    ): void {
+        if ($record->wasRecentlyCreated) {
+            return;
+        }
+
+        $updates = [];
+
+        if (filled($recordData['type_name'] ?? null) && $record->type_id === $this->defaultTypeId()) {
+            $updates['type_id'] = $typeId;
+        }
+
+        if (filled($recordData['counterparty_name'] ?? null) && $record->counterparty_id === $this->defaultCounterpartyId()) {
+            $updates['counterparty_id'] = $counterpartyId;
+        }
+
+        if ($record->title === 'Sin título informado' && filled($recordData['title'] ?? null)) {
+            $updates['title'] = $recordData['title'];
+        }
+
+        if ($updates !== []) {
+            $record->update($updates);
+        }
+    }
+
+    private function defaultTypeId(): int
+    {
+        return $this->defaultTypeId ??= $this->typeService->findOrCreateGetId(self::DEFAULT_TYPE_NAME);
+    }
+
+    private function defaultCounterpartyId(): int
+    {
+        return $this->defaultCounterpartyId ??= $this->counterpartyService->findOrCreateGetId(self::DEFAULT_COUNTERPARTY_NAME);
     }
 
     public function addMovement(array $movementData): Record
