@@ -66,7 +66,7 @@ return new class extends Migration
     {
         Schema::dropIfExists('states');
         Schema::dropIfExists('types');
-        Schema::dropIfExists('suppliers');
+        Schema::dropIfExists('counterparties');
         Schema::dropIfExists('areas');
         Schema::dropIfExists('records');
         Schema::dropIfExists('record_movements');

@@ -10,6 +10,8 @@ import Label from '@/Components/ui/label/Label.vue';
 import { Combobox } from '@/Components/ui/Combobox';
 import Alert from '@/Components/ui/alert/Alert.vue';
 import { Textarea } from '@/Components/ui/textarea';
+import { ArrowLeft } from 'lucide-vue-next';
+import { Link } from '@inertiajs/vue3';
 import {
   Select,
   SelectContent,
@@ -98,6 +100,14 @@ function deleteRecord(){
 
 <template>
     <NotificationToast />
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <Button as-child variant="ghost" class="w-fit px-0 hover:bg-transparent hover:text-primary">
+        <Link view-transition href="/records">
+          <ArrowLeft class="size-4" />
+          Volver al listado de expedientes
+        </Link>
+      </Button>
+    </div>
     <section class="border p-4 rounded-lg shadow-md bg-background">
         <div class="flex items-center justify-between mb-4">
             <div class="space-y-2">

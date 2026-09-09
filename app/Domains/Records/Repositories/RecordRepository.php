@@ -5,6 +5,7 @@ namespace App\Domains\Records\Repositories;
 use App\Domains\Records\Models\Record;
 use App\Domains\Records\Models\RecordMovement;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -131,26 +132,38 @@ class RecordRepository
         return $movements;
     }
 
-    public function getLastMovement(int $recordId)
+    public function getLastMovement(int $recordId): ?string
     {
-        $record = Record::find($recordId);
-        if ($record->last_movement_id) {
-            $recordMovement = RecordMovement::find($record->last_movement_id)->with('area')->first();
+        $record = Record::query()
+            ->with('lastMovement.area')
+            ->findOrFail($recordId);
+        $recordMovement = $record->lastMovement;
 
+        if ($recordMovement !== null) {
             return $recordMovement->moved_at.' Enviado a '.$recordMovement->area->name.': '.$recordMovement->associated_doc;
         }
+
+        return null;
     }
 
-    public function searchReport(array $searchData): Collection
+    public function searchReport(string $date): Collection
     {
-        $query = DB::table('records')
-            ->select('records.id', 'title', 'number', 'updated_at', 'type_id', 'counterparty_id')
-            ->join('states', 'records.state_id', '=', 'states.id');
-        if (! empty($searchData['date'])) {
-            $query->where('updated_at', '=', $searchData['date']);
-        }
-
-        return $query->orderBy('updated_at', 'desc')->get();
+        return Record::query()
+            ->select('id', 'title', 'number', 'updated_at', 'type_id', 'counterparty_id', 'last_movement_id')
+            ->with([
+                'type:id,name',
+                'counterparty:id,name',
+                'lastMovement:id,to_area_id,moved_at,associated_doc',
+                'lastMovement.area:id,name',
+                'movements' => fn (HasMany $query): HasMany => $query
+                    ->select('id', 'record_id', 'to_area_id', 'associated_doc', 'moved_at')
+                    ->with('area:id,name')
+                    ->oldest('moved_at')
+                    ->oldest('id'),
+            ])
+            ->where('updated_at', $date)
+            ->latest('id')
+            ->get();
     }
 
     public function getRecordById(string $id): Record

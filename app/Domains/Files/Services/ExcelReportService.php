@@ -2,14 +2,16 @@
 
 namespace App\Domains\Files\Services;
 
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
-use Maatwebsite\Excel\Concerns\WithCustomStartCell;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ExcelReportService implements FromArray, WithColumnWidths, WithCustomStartCell, WithHeadings
+class ExcelReportService implements FromArray, WithColumnWidths, WithHeadings, WithStyles
 {
     protected array $records;
 
@@ -21,12 +23,12 @@ class ExcelReportService implements FromArray, WithColumnWidths, WithCustomStart
     public function array(): array
     {
         return array_map(fn (array $record): array => [
-            'number' => $record['number'] ?? '',
-            'title' => $record['title'] ?? '',
-            'type' => $record['type'] ?? '',
-            'counterparty' => $record['counterparty'] ?? '',
-            'updated_at' => $record['last_movement'] ?? '',
-            'history' => $this->formatHistory($record['history'] ?? 'No hay movimientos'),
+            'number' => $this->sanitizeSpreadsheetValue($record['number'] ?? ''),
+            'title' => $this->sanitizeSpreadsheetValue($record['title'] ?? ''),
+            'type' => $this->sanitizeSpreadsheetValue($record['type'] ?? ''),
+            'counterparty' => $this->sanitizeSpreadsheetValue($record['counterparty'] ?? ''),
+            'updated_at' => $this->sanitizeSpreadsheetValue($record['last_movement'] ?? ''),
+            'history' => $this->sanitizeSpreadsheetValue($this->formatHistory($record['history'] ?? [])),
         ], $this->records);
     }
 
@@ -45,13 +47,12 @@ class ExcelReportService implements FromArray, WithColumnWidths, WithCustomStart
     public function columnWidths(): array
     {
         return [
-            'A' => 10,
-            'B' => 45,
-            'C' => 50,
-            'D' => 20,
-            'E' => 25,
-            'F' => 40,
-            'G' => 60,
+            'A' => 28,
+            'B' => 60,
+            'C' => 28,
+            'D' => 36,
+            'E' => 55,
+            'F' => 70,
         ];
     }
 
@@ -64,19 +65,41 @@ class ExcelReportService implements FromArray, WithColumnWidths, WithCustomStart
                 $movement['area_name'] ?? '',
                 $movement['associated_doc'] ?? '',
             ))
-            ->implode("\n", $history);
+            ->implode("\n");
 
         return $history;
     }
 
-    public function startCell(): string
-    {
-        return 'B2';
-    }
-
-    public function styles(Worksheet $sheet)
+    public function styles(Worksheet $sheet): array
     {
         return [
+            1 => [
+                'font' => ['bold' => true],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['argb' => 'FFE2E8F0'],
+                ],
+                'alignment' => [
+                    'vertical' => Alignment::VERTICAL_CENTER,
+                ],
+            ],
+            'A:F' => [
+                'alignment' => [
+                    'vertical' => Alignment::VERTICAL_TOP,
+                ],
+            ],
+            'B' => [
+                'alignment' => [
+                    'wrapText' => true,
+                    'vertical' => Alignment::VERTICAL_TOP,
+                ],
+            ],
+            'E' => [
+                'alignment' => [
+                    'wrapText' => true,
+                    'vertical' => Alignment::VERTICAL_TOP,
+                ],
+            ],
             'F' => [
                 'alignment' => [
                     'wrapText' => true,
@@ -84,5 +107,16 @@ class ExcelReportService implements FromArray, WithColumnWidths, WithCustomStart
                 ],
             ],
         ];
+    }
+
+    private function sanitizeSpreadsheetValue(mixed $value): string
+    {
+        $value = (string) $value;
+
+        if (Str::startsWith(Str::ltrim($value), ['=', '+', '-', '@'])) {
+            return "'{$value}";
+        }
+
+        return $value;
     }
 }

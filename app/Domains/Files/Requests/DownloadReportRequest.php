@@ -4,15 +4,13 @@ namespace App\Domains\Files\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class DownloadReportRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return true;
+        return $this->user() !== null;
     }
 
     /**
@@ -23,27 +21,23 @@ class DownloadReportRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'records' => ['required', 'array', 'min:1'],
+            'date' => ['required', Rule::date()->format('Y-m-d')],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'records.required' => 'Debe seleccionar al menos un expediente para descargar el reporte.',
-            'records.array' => 'El formato de los expedientes seleccionados es inválido.',
-            'records.min' => 'Debe seleccionar al menos un expediente para descargar el reporte.',
+            'date.required' => 'Debe seleccionar una fecha para descargar el reporte.',
+            'date.date_format' => 'La fecha debe tener el formato AAAA-MM-DD.',
         ];
     }
 
-    /**
-     * @return array{records}
-     */
-    public function validatedNewData(): array
+    public function validatedDate(): string
     {
-        /** @var array{records} $validated */
+        /** @var array{date: string} $validated */
         $validated = $this->validated();
 
-        return $validated;
+        return $validated['date'];
     }
 }

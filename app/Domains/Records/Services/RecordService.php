@@ -268,7 +268,7 @@ class RecordService
         return $this->recordRepository->getRecordMovements($recordId);
     }
 
-    public function getLastMovement(int $recordId)
+    public function getLastMovement(int $recordId): ?string
     {
         return $this->recordRepository->getLastMovement($recordId);
     }

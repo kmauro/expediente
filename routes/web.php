@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Files\Controllers\FileController;
+use App\Domains\Files\Controllers\ReportController;
 use App\Domains\Records\Controllers\ConfigController;
 use App\Domains\Records\Controllers\RecordController;
 use App\Domains\Users\Controllers\UserController;
@@ -44,10 +45,12 @@ Route::middleware('auth')->controller(RecordController::class)->group(function (
 
 Route::middleware('auth')->controller(FileController::class)->group(function () {
     Route::get('/file/upload', 'showUploadFile')->name('file.add');
-    Route::get('/report/generate', 'showGenerateReport')->name('report.generate');
     Route::post('/file/upload', 'uploadFile')->name('add.file');
-    Route::post('/report/search', 'searchReport')->name('report.search');
-    Route::post('/report/download', 'downloadExcelReport')->name('report.generate.excel');
+});
+
+Route::middleware('auth')->controller(ReportController::class)->group(function () {
+    Route::get('/report/generate', 'index')->name('report.generate');
+    Route::get('/report/download', 'download')->name('report.generate.excel');
 });
 
 Route::post('/logout', [UserController::class, 'logout'])

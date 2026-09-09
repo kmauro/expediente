@@ -3,52 +3,19 @@
 namespace App\Domains\Files\Services;
 
 use App\Domains\Files\Imports\FileImport;
-use App\Domains\Records\Repositories\RecordRepository;
-use App\Domains\Records\Services\CounterPartyService;
 use App\Domains\Records\Services\RecordService;
-use App\Domains\Records\Services\TypeService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class FileService
 {
     public function __construct(
-        protected RecordRepository $recordRepository,
-        protected CounterPartyService $counterpartyService,
-        protected TypeService $typeService,
         protected RecordService $recordService,
         protected RecordImportMapper $recordImportMapper,
     ) {}
-
-    public function searchReport(array $searchData): array
-    {
-        $records = $this->recordRepository->searchReport($searchData);
-        $recordsArray = [];
-        foreach ($records as $record) {
-            $recordsArray[] = [
-                'id' => $record->id,
-                'title' => $record->title,
-                'number' => $record->number,
-                'type' => $this->typeService->getById($record->type_id)->name,
-                'history' => $this->recordService->getRecordMovements($record->id)->toArray(),
-                'counterparty' => $this->counterpartyService->getById($record->counterparty_id)->name,
-                'last_movement' => $this->recordService->getLastMovement($record->id),
-            ];
-        }
-
-        return $recordsArray;
-    }
-
-    public function generateExcelReport(array $reportData): BinaryFileResponse
-    {
-        $excelFilePath = new ExcelReportService($reportData);
-
-        return Excel::download($excelFilePath, 'reporte_expedientes.xlsx');
-    }
 
     public function processExcelFile(UploadedFile $file): array
     {
